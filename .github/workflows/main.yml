@@ -1,0 +1,42 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main  # mainブランチにプッシュされたときにトリガー
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y expect
+
+    - name: Set up SSH
+      run: |
+        echo "${{ secrets.SSH_KEY }}" > /tmp/private_key
+        chmod 600 /tmp/private_key
+
+    - name: Deploy to Server
+      run: |
+        expect <<- EOF
+        set timeout -1
+        spawn ssh -o StrictHostKeyChecking=no amano@amano-miniPC.
+        expect "Enter passphrase for key '/tmp/private_key':"
+        send "${{ secrets.SSH_KEY_PASSPHRASE }}\r"
+        expect "$ "
+        send "cd ~/ドキュメント/Web/MailSommelier/LINEbot/app\r"
+        expect "$ "
+        send "git pull origin main\r"
+        expect "$ "
+        send "docker-compose down\r"
+        expect "$ "
+        send "docker-compose up -d --build\r"
+        expect "$ "
+        send "exit\r"
+        expect eof
+        EOF
