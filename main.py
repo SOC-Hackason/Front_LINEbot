@@ -1,13 +1,18 @@
-from flask import Flask
-from app.env import *
-from app import deploy
+from flask import Flask, request, jsonify
+import requests
 
 app = Flask(__name__)
-app.register_blueprint(deploy.bp)
+
+#ここ気にしないで
+import os
+if os.getenv("RUNNIG_GITHUB_CI") is None:
+    from app.env import *
+    from app import deploy
+    app.register_blueprint(deploy.bp)
 
 @app.route("/")
 def hello():
-    return "hello world"
+    return "Hello, World!"
 
 
 @app.route('/webhook', methods=['POST'])
@@ -15,7 +20,7 @@ def webhook():
     data = request.get_json()
     events = data.get('events', [])
     if not events:
-        return jsonify({'status': 'no events'}), 400
+        return jsonify({'status': 'no events'}), 200
 
     event = events[0]
     reply_token = event.get('replyToken')
@@ -23,7 +28,7 @@ def webhook():
     user_id = event['source'].get('userId')
 
     if not reply_token:
-        return jsonify({'status': 'no reply token'}), 400
+        return jsonify({'status': 'no reply token'}), 200
 
     if received_message == '認証':
         messages = [{
