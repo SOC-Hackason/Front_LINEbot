@@ -39,6 +39,6 @@ jobs:
       env:
         SECRET: ${{ secrets.WEBHOOK_SECRET }}
       run: |
-        payload='{"status": "success"}'
+        payload='{"status": "success", "nonce": "${{ steps.random-string.outputs.random }}"}'
         signature=$(echo -n $payload | openssl dgst -sha1 -hmac "$SECRET" | sed 's/^.* //')
         curl -X POST -H "Content-Type: application/json" -H "X-Hub-Signature: sha1=$signature" -d "$payload" https://webhook.amano.mydns.jp/deploy/linebot
