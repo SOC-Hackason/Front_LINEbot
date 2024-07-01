@@ -45,6 +45,7 @@ def webhook():
             f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={user_id}"
         )
         response_text = res.text
+        print(res.text)
         messages = [
             {
                 "type": "text",
