@@ -42,7 +42,7 @@ def webhook():
             }
         ]
     elif received_message == "要約":
-        loading_spinner(user_id)
+        print(loading_spinner(user_id))
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={user_id}"
         )
@@ -111,6 +111,7 @@ def loading_spinner(user_id):
     }
 
     response = requests.post(url, headers=headers, json=json.dumps(data))
+    return response.json()
 
 
 if __name__ == "__main__":
