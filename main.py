@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-import requests
+import requests, json
+import linebot
 
 app = Flask(__name__)
 
@@ -41,6 +42,7 @@ def webhook():
             }
         ]
     elif received_message == "要約":
+        loading_spinner(user_id)
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={user_id}"
         )
@@ -94,6 +96,21 @@ def webhook():
         return jsonify({"status": "error", "detail": response.text}), 500
 
     return jsonify({"status": "success"}), 200
+
+
+def loading_spinner(user_id):
+    url = "https://api.line.me/v2/bot/chat/loading/start"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer `{CHANNEL_TOKEN}`",
+    }
+
+    data = {
+        "chatId": user_id,
+        "loadingSeconds": 5,
+    }
+
+    response = requests.post(url, headers=headers, json=json.dumps(data))
 
 
 if __name__ == "__main__":
