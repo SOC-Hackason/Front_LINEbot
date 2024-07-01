@@ -44,11 +44,12 @@ def webhook():
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={user_id}"
         )
-        response_text = res.text.strip('"')
+        data = res.json()
+        summaries = data["summary"]
         messages = [
             {
                 "type": "text",
-                "text": response_text,
+                "text": "\n".join(summaries),
             }
         ]
     elif received_message == "既読":
