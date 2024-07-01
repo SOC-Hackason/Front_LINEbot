@@ -44,8 +44,7 @@ def webhook():
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={user_id}"
         )
-        response_text = res.text
-        print(response_text)
+        response_text = res.text.strip('"')
         messages = [
             {
                 "type": "text",
@@ -56,7 +55,7 @@ def webhook():
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/read?line_id={user_id}"
         )
-        response_text = res.text
+        response_text = res.text.strip('"')
         messages = [
             {
                 "type": "text",
@@ -67,14 +66,14 @@ def webhook():
         messages = [
             {
                 "type": "text",
-                "text": "2:32",
+                "text": "0.0.1",
             }
         ]
     else:
         messages = [
             {
                 "type": "text",
-                "text": f"{received_message}{received_message}ama",
+                "text": "cant understand your message.",
             }
         ]
 
