@@ -42,6 +42,7 @@ def webhook():
             }
         ]
     elif received_message == "要約":
+        print(user_id)
         print(loading_spinner(user_id))
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={user_id}"
@@ -102,15 +103,15 @@ def loading_spinner(user_id):
     url = "https://api.line.me/v2/bot/chat/loading/start"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer `{CHANNEL_TOKEN}`",
+        "Authorization": f"Bearer `{CHANNEL_TOKEN}`"
     }
 
     data = {
         "chatId": user_id,
-        "loadingSeconds": 5,
+        "loadingSeconds": 5
     }
 
-    response = requests.post(url, headers=headers, json=json.dumps(data))
+    response = requests.post(url, headers=headers, json=data)
     return response.json()
 
 
