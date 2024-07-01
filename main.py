@@ -49,7 +49,7 @@ def webhook():
         messages = [
             {
                 "type": "text",
-                "text": "\nxx--------xx".join(summaries),
+                "text": "\n--------\n".join(summaries),
             }
         ]
     elif received_message == "既読":
