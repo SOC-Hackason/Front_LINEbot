@@ -70,7 +70,7 @@ def webhook():
         messages = [
             {
                 "type": "text",
-                "text": "0.0.1\n2021/10/10\nAmano",
+                "text": "0.0.1\n2023\nAmano",
             }
         ]
     else:
