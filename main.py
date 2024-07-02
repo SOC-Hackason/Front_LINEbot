@@ -109,7 +109,6 @@ def free_message(sentence, line_id):
 def summary_reply(line_id):
     url = f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={line_id}"
     response = requests.get(url)
-    print(response)
     data = response.json()
     summaries = data["message"]
     msg_ids = data["msg_ids"]
