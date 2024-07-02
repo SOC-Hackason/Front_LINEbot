@@ -13,6 +13,7 @@ if os.getenv("RUNNIG_GITHUB_CI") is None:
 
     app.register_blueprint(deploy.bp)
 
+BACKEND_URL = "https://mails.amano.mydns.jp"
 
 @app.route("/")
 def hello():
@@ -48,7 +49,8 @@ def webhook():
             f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={user_id}"
         )
         data = res.json()
-        summaries = data["summary"]
+        summaries = data["message"]
+        msg_ids = data["msg_ids"]
         messages = [
             {
                 "type": "text",
@@ -74,12 +76,9 @@ def webhook():
             }
         ]
     else:
-        messages = [
-            {
-                "type": "text",
-                "text": "cant understand your message.",
-            }
-        ]
+        # get 
+        messages = free_message(received_message, user_id)
+        
 
     headers = {
         "Content-Type": "application/json; charset=UTF-8",
@@ -98,6 +97,28 @@ def webhook():
 
     return jsonify({"status": "success"}), 200
 
+def free_message(sentence, line_id):
+    url = f"https://mails.amano.mydns.jp/gmail/free_sentence?line_id={line_id}"
+    data = {
+        "sentence": sentence,
+        "line_id": line_id
+    }
+
+    response = requests.post(url, json=data)
+    print(response)
+    response = response.json()
+    if response.get("res") == "summary":
+        messages = summary_message(response["message"])
+    return messages
+    
+def summary_message(summaries):
+    messages = [
+        {
+            "type": "text",
+            "text": "\n--------\n".join(summaries),
+        }
+    ]
+    return messages
 
 def loading_spinner(user_id):
     url = "https://api.line.me/v2/bot/chat/loading/start"
