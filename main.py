@@ -104,6 +104,13 @@ def free_message(sentence, line_id):
         messages = summary_message(response["message"])
     elif response.get("res") == "read":
         messages = read_message(response["message"])
+    else:
+        messages = [
+            {
+                "type": "text",
+                "text": response["message"],
+            }
+        ]
     return messages
 
 def summary_reply(line_id):
