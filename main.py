@@ -10,13 +10,6 @@ ADD_BP = os.getenv("ADD_BP")
 
 app = Flask(__name__)
 
-# ここ気にしないで
-import os
-
-if os.getenv("RUNNIG_GITHUB_CI") is None:
-    from app import deploy
-    app.register_blueprint(deploy.bp)
-
 BACKEND_URL = "https://mails.amano.mydns.jp"
 
 @app.route("/")
@@ -48,7 +41,7 @@ def webhook():
         ]
     elif received_message == "要約":
         print(user_id)
-        print(loading_spinner(user_id))
+        loading_spinner(user_id)
         messages = summary_reply(user_id)
     elif received_message == "既読":
         res = requests.get(
@@ -116,6 +109,7 @@ def free_message(sentence, line_id):
 def summary_reply(line_id):
     url = f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={line_id}"
     response = requests.get(url)
+    print(response)
     data = response.json()
     summaries = data["message"]
     msg_ids = data["msg_ids"]
@@ -157,4 +151,4 @@ def loading_spinner(user_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=49515)
+    app.run(debug=True, host="localhost", port=49515)
