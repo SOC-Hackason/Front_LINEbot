@@ -1,5 +1,5 @@
 __pycache__/
 /__init__.py 
-env.py 
+.env
 deploy-script.sh
 deploy.py

@@ -1,6 +1,12 @@
 from flask import Flask, request, jsonify
-import requests, json
+import requests, json, os
 import linebot
+from dotenv import load_dotenv
+
+load_dotenv()
+CHANNEL_TOKEN = os.getenv("CHANNEL_TOKEN")
+REPLY_URL = os.getenv("REPLY_URL")
+ADD_BP = os.getenv("ADD_BP")
 
 app = Flask(__name__)
 
@@ -8,9 +14,7 @@ app = Flask(__name__)
 import os
 
 if os.getenv("RUNNIG_GITHUB_CI") is None:
-    from app.env import *
     from app import deploy
-
     app.register_blueprint(deploy.bp)
 
 BACKEND_URL = "https://mails.amano.mydns.jp"
