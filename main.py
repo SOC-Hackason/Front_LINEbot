@@ -49,18 +49,7 @@ def webhook():
     elif received_message == "要約":
         print(user_id)
         print(loading_spinner(user_id))
-        res = requests.get(
-            f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={user_id}"
-        )
-        data = res.json()
-        summaries = data["message"]
-        msg_ids = data["msg_ids"]
-        messages = [
-            {
-                "type": "text",
-                "text": "\n--------\n".join(summaries),
-            }
-        ]
+        messages = summary_reply(user_id)
     elif received_message == "既読":
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/read?line_id={user_id}"
@@ -113,6 +102,26 @@ def free_message(sentence, line_id):
     response = response.json()
     if response.get("res") == "summary":
         messages = summary_message(response["message"])
+    elif response.get("res") == "read":
+        messages = read_message(response["message"])
+    return messages
+
+def summary_reply(line_id):
+    url = f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={line_id}"
+    response = requests.get(url)
+    data = response.json()
+    summaries = data["message"]
+    msg_ids = data["msg_ids"]
+    messages = summary_message(summaries)
+    return messages
+
+def read_message(message):
+    messages = [
+        {
+            "type": "text",
+            "text": message,
+        }
+    ]
     return messages
     
 def summary_message(summaries):
