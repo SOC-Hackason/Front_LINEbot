@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import requests, json, os
+import requests, sys, json, os
 import linebot
 from dotenv import load_dotenv
 
@@ -28,6 +28,9 @@ def webhook():
     reply_token = event.get("replyToken")
     received_message = event["message"].get("text")
     user_id = event["source"].get("userId")
+    
+    print(user_id)
+    sys.stdout.flush()
 
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
@@ -40,7 +43,6 @@ def webhook():
             }
         ]
     elif received_message == "要約":
-        print(user_id)
         loading_spinner(user_id)
         messages = summary_reply(user_id)
     elif received_message == "既読":
@@ -91,12 +93,18 @@ def free_message(sentence, line_id):
     }
 
     response = requests.post(url, json=data)
-    print(response)
     response = response.json()
     if response.get("res") == "summary":
         messages = summary_message(response["message"])
     elif response.get("res") == "read":
         messages = read_message(response["message"])
+    elif response.get("res") == "greating":
+        messages = [
+            {
+                "type": "text",
+                "text": response["message"],
+            }
+        ]
     else:
         messages = [
             {
