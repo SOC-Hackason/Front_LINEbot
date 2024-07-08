@@ -6,20 +6,23 @@ app = Flask(__name__)
 
 # ここ気にしないで
 import os
-
+'''
 if os.getenv("RUNNIG_GITHUB_CI") is None:
     from app.env import *
     from app import deploy
 
     app.register_blueprint(deploy.bp)
+    '''
+from app.env import *
 
 BACKEND_URL = "https://mails.amano.mydns.jp"
 
+#Flaskの書き方
 @app.route("/")
 def hello():
     return "Hello, World!"
 
-
+#LINEプラットフォームがwebhook URLのサーバにアクセスしたときにこのプログラムがサーバに返す関数
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json()
@@ -35,6 +38,7 @@ def webhook():
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
 
+    #受け取ったメッセージから送るメッセージmessagesを決定
     if received_message == "認証":
         messages = [
             {
@@ -75,6 +79,9 @@ def webhook():
                 "text": "0.0.1\n2023\nAmano",
             }
         ]
+    elif received_message == "フレックス":
+        with open(os.path.join(os.path.dirname(__file__), "flex.json"), "r") as j:
+            messages = json.load(j)
     else:
         # get 
         messages = free_message(received_message, user_id)
@@ -85,13 +92,16 @@ def webhook():
         "Authorization": f"Bearer {CHANNEL_TOKEN}",
     }
 
+    #サーバにPOSTするデータ（荷物，payload）にmessagesを乗せる
     payload = {
         "replyToken": reply_token,
         "messages": messages,
     }
 
+    #サーバにPOST
     response = requests.post(REPLY_URL, headers=headers, json=payload)
 
+    #接続状況返す　200は成功
     if response.status_code != 200:
         return jsonify({"status": "error", "detail": response.text}), 500
 
@@ -137,4 +147,4 @@ def loading_spinner(user_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=49515)
+    app.run(debug=True, host="0.0.0.0", port=8000)
