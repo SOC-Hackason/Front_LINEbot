@@ -30,15 +30,12 @@ def webhook():
     try:
         received_message = event["message"].get("text")
         messages = message_reply(user_id, received_message)
-    except:
+    except KeyError:
         postback_data = event["postback"].get("data")
         loading_spinner(user_id)
         messages = postback_reply(user_id, postback_data)
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
-
-    
-        
 
     headers = {
         "Content-Type": "application/json; charset=UTF-8",
@@ -53,6 +50,7 @@ def webhook():
     response = requests.post(REPLY_URL, headers=headers, json=payload)
 
     if response.status_code != 200:
+        print("LINE_ERROR")
         print(response.text)
         sys.stdout.flush()
         return jsonify({"status": "error", "detail": response.text}), 500
@@ -97,7 +95,7 @@ def message_reply(user_id, received_message):
 
     return messages
 
-def postback_reply(user_id, postback_data):
+def postback_reply(user_id, postback_data:str):
     if postback_data.startswith("msg_id"):
         msg_id = postback_data.split("=")[1]
         url = BACKEND_URL + "/gmail/emails"
@@ -107,10 +105,31 @@ def postback_reply(user_id, postback_data):
         }
         response = requests.get(url, params=params)
         data = response.json()
-        messages = flex_one_mail(data)
+        messages = flex_one_mail(data, msg_id)
+    elif postback_data.startswith("action"):
+        #reply, read, Glink
+        print(postback_data.split("=")[1].split("%"))
+        action, msg_id = postback_data.split("=")[1].split("%")
+        sys.stdout.flush()
+        messages = postback_action_reply(user_id, action, msg_id)
+    elif postback_data.startswith("spaction"):
+        action, msg_ids = postback_data.split("=")[1].split("%")
+        msg_ids = msg_ids.split(",")
+        messages = postback_spaction(user_id, action, msg_ids)
     return messages
 
-def flex_one_mail(data):
+def postback_spaction(user_id, action, msg_ids):
+    if action == "read_all":
+        url = BACKEND_URL + "/gmail/read"
+        params = {
+            "msg_ids": msg_ids,
+            "line_id": user_id
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        return [{"type": "text", "text": "すべて既読にしました"}]
+
+def flex_one_mail(data, msg_id):
     _from = data["from"]
     _to = data["to"]
     _subject = data["subject"]
@@ -118,34 +137,126 @@ def flex_one_mail(data):
 
     bubble = {
         "type": "bubble",
-        "body": {
+        "header": {
             "type": "box",
             "layout": "vertical",
             "contents": [
                 {
                     "type": "text",
-                    "text": _from,
-                    "weight": "bold",
-                    "size": "sm"
-                },
-                {
-                    "type": "text",
-                    "text": _to,
-                    "weight": "bold",
-                    "size": "sm"
-                },
-                {
-                    "type": "text",
                     "text": _subject,
                     "weight": "bold",
-                    "size": "sm"
-                },
-                {
-                    "type": "text",
-                    "text": _message,
+                    "size": "lg",
                     "wrap": True
                 }
+            ],
+            "backgroundColor": "#EEEEEE",
+            "paddingAll": "md"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "From:",
+                            "size": "sm",
+                            "color": "#888888",
+                            "flex": 1
+                        },
+                        {
+                            "type": "text",
+                            "text": _from,
+                            "size": "sm",
+                            "wrap": True,
+                            "flex": 4
+                        }
+                    ],
+                    "margin": "md"
+                },
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "To:",
+                            "size": "sm",
+                            "color": "#888888",
+                            "flex": 1
+                        },
+                        {
+                            "type": "text",
+                            "text": _to,
+                            "size": "sm",
+                            "wrap": True,
+                            "flex": 4
+                        }
+                    ],
+                    "margin": "md"
+                },
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": _message,
+                            "wrap": True,
+                            "size": "sm",
+                            "maxLines": 10,
+                        }
+                    ],
+                    "backgroundColor": "#F7F7F7",
+                    "paddingAll": "md",
+                    "cornerRadius": "md",
+                    "margin": "md",
+                }
             ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "horizontal",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "height": "sm",
+                    "action": {
+                        "type": "postback",
+                        "label": "返信",
+                        "data": f"action=reply%{msg_id}"
+                    },
+                    "color": "#00B900"
+                },
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "height": "sm",
+                    "action": {
+                        "type": "postback",
+                        "label": "既読",
+                        "data": f"action=read%{msg_id}"
+                    },
+                    "color": "#00B900"
+                },
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "height": "sm",
+                    "action": {
+                        "type": "postback",
+                        "label": "GLinK(Not yet)",
+                        "data": f"action=Glink%{msg_id}"
+                    },
+                    "color": "#00B900"
+                }
+            ],
+            "flex": 0
         }
     }
 
@@ -158,6 +269,79 @@ def flex_one_mail(data):
     ]
 
     return messages
+
+def postback_action_reply(user_id, action, msg_id):
+    if action == "reply":
+        url = BACKEND_URL + "/gmail/reply"
+        params = {
+            "msg_id": msg_id,
+            "line_id": user_id
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        draft = data["message"]
+        return create_draft_preview_message(draft)
+    elif action== "read":
+        url = BACKEND_URL + "/gmail/read"
+        params = {
+            "msg_id": msg_id,
+            "line_id": user_id
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        return [{"type": "text", "text": "既読にしました"}]
+    elif action == "Glink":
+        pass
+
+def create_draft_preview_message(draft_content):
+    bubble = {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "自動下書きが作成されました",
+                    "weight": "bold",
+                    "size": "md",
+                    "wrap": True,
+                    "margin": "md"
+                },
+                {
+                    "type": "text",
+                    "text": draft_content,
+                    "size": "sm",
+                    "wrap": True,
+                    "margin": "md"
+                }
+            ],
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "uri",
+                        "label": "下書きを編集(Not yet)",
+                        "uri": "https://test.com"
+                    }
+                }
+            ],
+            "flex": 0
+        }
+    }
+    
+    return [{
+        "type": "flex",
+        "altText": "自動下書きが作成されました",
+        "contents": bubble
+    }]
 
 def list_message(line_id):
     url = BACKEND_URL + "/gmail/unread_titles"
@@ -193,7 +377,7 @@ def list_message(line_id):
                         "data": f"msg_id={msg_id}"
                     },
                     "style": "primary",
-                    "color": "#905c44",
+                    "color": "#00B900",
                     "height": "sm",
                     "margin": "sm",
                     "flex": 1,
@@ -210,6 +394,24 @@ def list_message(line_id):
             "type": "box",
             "layout": "vertical",
             "contents": flex_contents
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "すべて既読にする",
+                        "data": f"spaction=read_all%{','.join(msg_ids)}"
+                    },
+                    "style": "primary",
+                    "color": "#00B900",
+                    "height": "sm"
+                }
+            ],
+            "margin": "sm"
         }
     }
 
