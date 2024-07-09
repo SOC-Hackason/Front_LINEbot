@@ -1,4 +1,4 @@
-from app.env import *
+from app.env_KF import *
 import json, os
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
@@ -54,7 +54,7 @@ def handle_message(event):
     else:
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text="「Flex Message」と入力してください。")
+            TextSendMessage(text="「f」と入力してください。")
         )
 
 @handler.add(PostbackEvent)
