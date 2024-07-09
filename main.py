@@ -229,7 +229,8 @@ def flex_one_mail(data, msg_id):
                     "action": {
                         "type": "postback",
                         "label": "返信",
-                        "data": f"action=reply%{msg_id}"
+                        "data": f"action=reply%{msg_id}",
+                        "displayText": "返信を作成します"
                     },
                     "color": "#00B900"
                 },
@@ -240,7 +241,8 @@ def flex_one_mail(data, msg_id):
                     "action": {
                         "type": "postback",
                         "label": "既読",
-                        "data": f"action=read%{msg_id}"
+                        "data": f"action=read%{msg_id}",
+                        "displayText": "既読にします"
                     },
                     "color": "#00B900"
                 },
@@ -284,7 +286,7 @@ def postback_action_reply(user_id, action, msg_id):
     elif action== "read":
         url = BACKEND_URL + "/gmail/read"
         params = {
-            "msg_id": msg_id,
+            "msg_ids": [msg_id],
             "line_id": user_id
         }
         response = requests.get(url, params=params)
@@ -374,7 +376,8 @@ def list_message(line_id):
                     "action": {
                         "type": "postback",
                         "label": "詳細",
-                        "data": f"msg_id={msg_id}"
+                        "data": f"msg_id={msg_id}",
+                        "displayText": "詳細を表示します"
                     },
                     "style": "primary",
                     "color": "#00B900",
@@ -404,7 +407,8 @@ def list_message(line_id):
                     "action": {
                         "type": "postback",
                         "label": "すべて既読にする",
-                        "data": f"spaction=read_all%{','.join(msg_ids)}"
+                        "data": f"spaction=read_all%{','.join(msg_ids)}",
+                        "displayText": "すべてのメールを既読にします"
                     },
                     "style": "primary",
                     "color": "#00B900",
