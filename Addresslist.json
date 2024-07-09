@@ -54,7 +54,7 @@
                   "action": {
                     "type": "postback",
                     "label": "Block",
-                    "data": "a@gmail.com"
+                    "data": "address=a@gmail.com"
                   },
                   "height": "sm",
                   "scaling": true
@@ -77,7 +77,7 @@
                   "action": {
                     "type": "postback",
                     "label": "Block",
-                    "data": "b@gmail.com"
+                    "data": "address=b@gmail.com"
                   },
                   "height": "sm",
                   "scaling": true

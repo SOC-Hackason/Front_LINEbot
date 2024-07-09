@@ -2,11 +2,15 @@ from flask import Flask, request, jsonify
 import requests, sys, json, os
 import linebot
 from dotenv import load_dotenv
+from linebot import LineBotApi, WebhookHandler
+from linebot.models import MessageEvent, PostbackEvent, TextMessage, FlexSendMessage, TextSendMessage
+
 
 #ngrokサーバ個人CH開発時はここをコメントアウト
 
 load_dotenv()
 CHANNEL_TOKEN = os.getenv("CHANNEL_TOKEN")
+CHANNEL_SECRET = os.getenv("CHANNEL_SECRET")
 REPLY_URL = os.getenv("REPLY_URL")
 ADD_BP = os.getenv("ADD_BP")
 
@@ -14,6 +18,10 @@ ADD_BP = os.getenv("ADD_BP")
 app = Flask(__name__)
 
 BACKEND_URL = "https://mails.amano.mydns.jp"
+line_bot_api = LineBotApi(CHANNEL_TOKEN)
+handler = WebhookHandler(CHANNEL_SECRET)
+
+blacklist=[]
 
 #Flaskの書き方
 @app.route("/")
@@ -36,7 +44,6 @@ def webhook():
         messages = message_reply(user_id, received_message)
     except KeyError:
         postback_data = event["postback"].get("data")
-        loading_spinner(user_id)
         messages = postback_reply(user_id, postback_data)
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
@@ -77,6 +84,7 @@ def message_reply(user_id, received_message):
         loading_spinner(user_id)
         messages = list_message(user_id)
     elif received_message == "既読":
+        loading_spinner(user_id)
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/read?line_id={user_id}"
         )
@@ -98,12 +106,17 @@ def message_reply(user_id, received_message):
                 }
             ]
     elif received_message == "以上":
+        #一時ファイルに退避
+        global blacklist
+        blacklist_send=blacklist
         messages =[
             {
                 "type": "text",
-                "text": "a",
+                "text": str(blacklist_send),
             }
         ]
+        #blacklist初期化
+        blacklist=[]
     elif received_message == "version":
         messages = [
             {
@@ -138,6 +151,11 @@ def postback_reply(user_id, postback_data:str):
         action, msg_ids = postback_data.split("=")[1].split("%")
         msg_ids = msg_ids.split(",")
         messages = postback_spaction(user_id, action, msg_ids)
+    elif postback_data.startswith("address"):
+        global blacklist
+        data=postback_data.split("=")[1]
+        blacklist.append(data)
+        messages=1
     return messages
 
 def postback_spaction(user_id, action, msg_ids):
