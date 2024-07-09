@@ -1,16 +1,15 @@
 from flask import Flask, request, jsonify
 import requests, sys, json, os
 import linebot
-from app.env_KF import *
 from dotenv import load_dotenv
 
 #ngrokサーバ個人CH開発時はここをコメントアウト
-"""
+
 load_dotenv()
 CHANNEL_TOKEN = os.getenv("CHANNEL_TOKEN")
 REPLY_URL = os.getenv("REPLY_URL")
 ADD_BP = os.getenv("ADD_BP")
-"""
+
 
 app = Flask(__name__)
 
