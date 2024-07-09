@@ -1,15 +1,22 @@
 from flask import Flask, request, jsonify
 import requests, sys, json, os
 import linebot
+from linebot import LineBotApi, WebhookHandler
+from linebot.models import MessageEvent, PostbackEvent, TextMessage, FlexSendMessage, TextSendMessage
 from dotenv import load_dotenv
 
 #ngrokサーバ個人CH開発時はここをコメントアウト
 
 load_dotenv()
 CHANNEL_TOKEN = os.getenv("CHANNEL_TOKEN")
+CHANNEL_SECRET = os.getenv("CHANNEL_SECRET")
 REPLY_URL = os.getenv("REPLY_URL")
 ADD_BP = os.getenv("ADD_BP")
 
+blacklist=[]
+
+line_bot_api = LineBotApi(CHANNEL_TOKEN)
+handler = WebhookHandler(CHANNEL_SECRET)
 
 app = Flask(__name__)
 
@@ -36,10 +43,11 @@ def webhook():
         messages = message_reply(user_id, received_message)
     except KeyError:
         postback_data = event["postback"].get("data")
-        loading_spinner(user_id)
+        
         messages = postback_reply(user_id, postback_data)
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
+
 
     headers = {
         "Content-Type": "application/json; charset=UTF-8",
@@ -60,6 +68,7 @@ def webhook():
         return jsonify({"status": "error", "detail": response.text}), 500
 
     return jsonify({"status": "success"}), 200
+
 
 #ユーザーの入力を読み取り，後述の関数を起動
 def message_reply(user_id, received_message):
@@ -98,12 +107,16 @@ def message_reply(user_id, received_message):
                 }
             ]
     elif received_message == "以上":
+        global blacklist
+        blacklist_send=blacklist
         messages =[
             {
                 "type": "text",
-                "text": "a",
+                "text": str(blacklist_send),
             }
         ]
+        blacklist=[]
+
     elif received_message == "version":
         messages = [
             {
@@ -119,6 +132,7 @@ def message_reply(user_id, received_message):
 
 def postback_reply(user_id, postback_data:str):
     if postback_data.startswith("msg_id"):
+        loading_spinner(user_id)
         msg_id = postback_data.split("=")[1]
         url = BACKEND_URL + "/gmail/emails"
         params = {
@@ -129,16 +143,24 @@ def postback_reply(user_id, postback_data:str):
         data = response.json()
         messages = flex_one_mail(data, msg_id)
     elif postback_data.startswith("action"):
+        loading_spinner(user_id)
         #reply, read, Glink
         print(postback_data.split("=")[1].split("%"))
         action, msg_id = postback_data.split("=")[1].split("%")
         sys.stdout.flush()
         messages = postback_action_reply(user_id, action, msg_id)
     elif postback_data.startswith("spaction"):
+        loading_spinner(user_id)
         action, msg_ids = postback_data.split("=")[1].split("%")
         msg_ids = msg_ids.split(",")
         messages = postback_spaction(user_id, action, msg_ids)
+    elif postback_data.startswith("address"):
+        messages=1
+        address = postback_data.split("=")[1]
+        blacklist.append(address)
+
     return messages
+
 
 def postback_spaction(user_id, action, msg_ids):
     if action == "read_all":
@@ -518,6 +540,12 @@ def loading_spinner(user_id):
     response = requests.post(url, headers=headers, json=data)
     return response.json()
 
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    global blacklist
+    user_id = event.source.user_id
+    data = event.postback.data
+    blacklist.append(data)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8000)
