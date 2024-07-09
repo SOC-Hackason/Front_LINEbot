@@ -460,7 +460,59 @@ def summary_reply(line_id):
     data = response.json()
     summaries = data["message"]
     msg_ids = data["msg_ids"]
-    messages = summary_message(summaries)
+
+    flex_contents = []
+    for summary,msg_id in zip(summaries, msg_ids):
+        flex_contents.append({
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": summary,
+                    "wrap": True,
+                    "weight": "bold",
+                    "size": "xs",
+                    "maxLines": 2,
+                    "flex": 3,
+                },
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "詳細",
+                        "data": f"msg_id={msg_id}"
+                    },
+                    "style": "primary",
+                    "color": "#004aad",
+                    "height": "sm",
+                    "margin": "sm",
+                    "flex": 1,
+                }
+            ],
+            "alignItems": "center",
+            "paddingAll": "sm",
+            "margin": "xs",
+
+        })
+
+    bubble = {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": flex_contents
+        }
+    }
+
+    messages = [
+        {
+            "type": "flex",
+            "altText": "要約一覧",
+            "contents": bubble
+        }
+    ]
+
     return messages
 
 def read_message(message):
@@ -498,4 +550,4 @@ def loading_spinner(user_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="localhost", port=49515)
+    app.run(debug=True, host="localhost", port=8000)
