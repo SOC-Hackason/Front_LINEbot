@@ -1,0 +1,97 @@
+{
+    "type": "bubble",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "text",
+          "text": "Recent Addresses",
+          "weight": "bold",
+          "size": "xxl",
+          "margin": "md"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "Address",
+              "align": "center",
+              "margin": "lg"
+            },
+            {
+              "type": "text",
+              "text": "Block",
+              "align": "center",
+              "margin": "none"
+            }
+          ],
+          "margin": "md"
+        },
+        {
+          "type": "separator",
+          "margin": "md"
+        },
+        {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "a@gmail.com",
+                  "margin": "lg",
+                  "align": "center",
+                  "gravity": "center"
+                },
+                {
+                  "type": "button",
+                  "action": {
+                    "type": "postback",
+                    "label": "Block",
+                    "data": "a@gmail.com"
+                  },
+                  "height": "sm",
+                  "scaling": true
+                }
+              ]
+            },
+            {
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "b@gmail.com",
+                  "margin": "lg",
+                  "align": "center",
+                  "gravity": "center"
+                },
+                {
+                  "type": "button",
+                  "action": {
+                    "type": "postback",
+                    "label": "Block",
+                    "data": "b@gmail.com"
+                  },
+                  "height": "sm",
+                  "scaling": true
+                }
+              ]
+            }
+          ],
+          "margin": "lg"
+        }
+      ]
+    },
+    "styles": {
+      "footer": {
+        "separator": true
+      }
+    }
+  }
