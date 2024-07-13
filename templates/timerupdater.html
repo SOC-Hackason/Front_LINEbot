@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer App</title>
+</head>
+<body onload="startTimer(30)">
+    <h1>Timer App</h1>
+    <input type="number" id="timerInput" placeholder="Enter seconds">
+    <button onclick="startTimer()">Start Timer</button>
+    <h2 id="timerDisplay">00:00</h2>
+
+    <script>
+        function startTimer(sec) {
+            const btn_seconds = document.getElementById('timerInput').value;
+            const seconds=sec
+            fetch(`/start/${seconds}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "started") {
+                        updateTimer();
+                    }
+                });
+        }
+
+        function updateTimer() {
+            fetch('/get_time')
+                .then(response => response.json())
+                .then(data => {
+                    const timeLeft = data.time_left;
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = Math.floor(timeLeft % 60);
+                    document.getElementById('timerDisplay').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    if (timeLeft > 0) {
+                        setTimeout(updateTimer, 100);
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
+
+<!--
+4. アプリケーションを実行します：
+```
+python app.py
+```
+
+このアプリケーションでは、以下の機能が実装されています：
+
+- ユーザーがタイマーの秒数を入力し、"Start Timer"ボタンをクリックしてタイマーを開始できます。
+- サーバーサイドでタイマーの開始時間と持続時間を管理します。
+- クライアントサイドのJavaScriptが定期的にサーバーに残り時間を問い合わせ、表示を更新します。
+
+javascript側で再帰構造のループ回して秒数アップデートしてる
+onloadでhtmlページ読み込み完了時に関数が実行できるのでこれ使う
+
+この基本的な実装を拡張して、一時停止、リセット、複数のタイマーの管理などの機能を追加することができます。また、WebSocketsを使用してリアルタイムの更新を実装することで、より効率的なアプリケーションにすることもできます。
+-->

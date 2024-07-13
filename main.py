@@ -4,7 +4,8 @@ import linebot
 from dotenv import load_dotenv
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, PostbackEvent, TextMessage, FlexSendMessage, TextSendMessage
-
+import asyncio
+from SummaryTimer import summary_timer
 
 #ngrokサーバ個人CH開発時はここをコメントアウト
 
@@ -39,6 +40,14 @@ def webhook():
     event = events[0]
     reply_token = event.get("replyToken")
     user_id = event["source"].get("userId")
+
+    """
+    #timer.pyでsummary_messageを呼び出すために，最後にアクセスしたlineidを一時保存
+    #lineid.txtは機密なので絶対にgitignoreに入れてくれ
+    with open (os.path.join(os.path.dirname(__file__), "lineid.txt"), "w") as file:
+        file.write(user_id)
+    """
+
     try:
         received_message = event["message"].get("text")
         messages = message_reply(user_id, received_message)
@@ -538,4 +547,15 @@ def loading_spinner(user_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8000)
+    async def start_timer():
+        print("starting timer")
+        summary_timer(15)
+        task = asyncio.create_task(main())
+        
+
+    async def main():
+        print("starting flask")
+        app.run(debug=True, host="0.0.0.0", port=8000)
+
+    # イベントループを開始
+    asyncio.run(start_timer())

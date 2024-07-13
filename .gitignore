@@ -5,3 +5,4 @@ deploy-script.sh
 deploy.py
 /main_.py
 /app/env_KF.py
+lineid.txt
