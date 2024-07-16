@@ -311,7 +311,14 @@ def postback_action_reply(user_id, action, msg_id):
         data = response.json()
         return [{"type": "text", "text": "既読にしました"}]
     elif action == "Glink":
-        
+        url = "https://mail.google.com/mail/u/0/#inbox/msg_id"
+        params = {
+            "msg_ids": [msg_id],
+            "line_id": user_id
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        return [{"type": "text", "text": "Gmailアプリの起動"}]
         pass
 
 def create_draft_preview_message(draft_content):
