@@ -376,9 +376,9 @@ def create_draft_preview_message(draft_content):
                     "style": "link",
                     "height": "sm",
                     "action": {
-                        "type": "url",
+                        "type": "uri",
                         "label": "下書きを編集(Not yet)",
-                        "url": "https://test.com"
+                        "uri": "https://test.com"
                     }
                 }
             ],
