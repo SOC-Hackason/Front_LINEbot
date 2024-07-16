@@ -173,6 +173,8 @@ def flex_one_mail(data, msg_id):
     _to = data["to"]
     _subject = data["subject"]
     _message = data["message"]
+    _importance = data["importance"]
+    _category = data["category"]
 
     bubble = {
         "type": "bubble",
