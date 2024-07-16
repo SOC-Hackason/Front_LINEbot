@@ -78,8 +78,6 @@ def message_reply(user_id, received_message):
         messages = list_message(user_id)
     elif received_message == "ラベリング":
         messages = label_message(user_id)
-    elif received_message == "分類":
-        pass
     elif received_message =="分類":
         messages = class_reply(user_id)
     elif received_message == "既読":
