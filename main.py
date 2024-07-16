@@ -78,6 +78,8 @@ def message_reply(user_id, received_message):
         messages = list_message(user_id)
     elif received_message == "ラベリング":
         messages = label_message(user_id)
+    elif received_message == "分類":
+        pass
     elif received_message == "既読":
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/read?line_id={user_id}"
@@ -138,6 +140,18 @@ def postback_reply(user_id, postback_data:str, postback_params=None):
     elif postback_data.startswith("配信"):
         selected_datetime = postback_params['datetime']
         messages = change_datetime(user_id, selected_datetime)
+    elif postback_data.startswith("label"):
+        label_type, msg_id = postback_data.split("&")
+        label_type = label_type.split("=")[1]
+        msg_id = msg_id.split("=")[1]
+        messages = create_quick_reply(msg_id, label_type, LABELS_IMPORTANCE, "chl") if label_type == "importance" else create_quick_reply(msg_id, label_type, LABELS_CATEGORY, "chl")
+    elif postback_data.startswith("chl"):
+        label_type, msg_id, new_label = postback_data.split("&")
+        label_type = label_type.split("=")[1]
+        msg_id = msg_id.split("=")[1]
+        new_label = new_label.split("=")[1]
+        # TODO: 
+        pass
     return messages
 
 def change_datetime(user_id, selected_datetime:str):
@@ -260,44 +274,80 @@ def flex_one_mail(data, msg_id):
         },
         "footer": {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "spacing": "sm",
             "contents": [
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "height": "sm",
-                    "action": {
-                        "type": "postback",
-                        "label": "返信",
-                        "data": f"action=reply%{msg_id}",
-                        "displayText": "返信を作成します"
+                { 
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                    {
+                        "type": "button",
+                        "style": "primary",
+                        "height": "sm",
+                        "action": {
+                            "type": "postback",
+                            "label": "返信",
+                            "data": f"action=reply%{msg_id}",
+                            "displayText": "返信を作成します"
+                        },
+                        "color": "#00B900"
                     },
-                    "color": "#00B900"
+                    {
+                        "type": "button",
+                        "style": "primary",
+                        "height": "sm",
+                        "action": {
+                            "type": "postback",
+                            "label": "既読",
+                            "data": f"action=read%{msg_id}",
+                            "displayText": "既読にします"
+                        },
+                        "color": "#00B900"
+                    },
+                    {
+                        "type": "button",
+                        "style": "primary",
+                        "height": "sm",
+                        "action": {
+                            "type": "postback",
+                            "label": "GLinK(Not yet)",
+                            "data": f"action=Glink%{msg_id}"
+                        },
+                        "color": "#00B900"
+                    },
+                    ],
                 },
                 {
-                    "type": "button",
-                    "style": "primary",
-                    "height": "sm",
-                    "action": {
-                        "type": "postback",
-                        "label": "既読",
-                        "data": f"action=read%{msg_id}",
-                        "displayText": "既読にします"
-                    },
-                    "color": "#00B900"
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "secondary",
+                            "height": "sm",
+                            "action": {
+                                "type": "postback",
+                                "label": f"{_importance}",
+                                "data": f"label=importance&msg_id={msg_id}",
+                                "displayText": f"Importanceを変更します"
+                            },
+                            "color": "#AAAAAA"
+                        },
+                        {
+                            "type": "button",
+                            "style": "secondary",
+                            "height": "sm",
+                            "action": {
+                                "type": "postback",
+                                "label": f"{_category}",
+                                "data": f"label=category&msg_id={msg_id}",
+                                "displayText": f"Categoryを変更します"
+                            },
+                            "color": "#AAAAAA"
+                        }
+                    ]
                 },
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "height": "sm",
-                    "action": {
-                        "type": "postback",
-                        "label": "GLinK(Not yet)",
-                        "data": f"action=Glink%{msg_id}"
-                    },
-                    "color": "#00B900"
-                }
             ],
             "flex": 0
         }
@@ -701,14 +751,14 @@ def postback_dev(user_id, action, message_id):
         
     return messages
     
-def create_quick_reply(message_id, label_type, options):
+def create_quick_reply(message_id, label_type, options, tag="devl"):
     items = [
         {
             "type": "action",
             "action": {
                 "type": "postback",
                 "label": option,
-                "data": f"devl={label_type}&message_id={message_id}&new_label={option}",
+                "data": f"{tag}={label_type}&message_id={message_id}&new_label={option}",
                 "displayText": f"{label_type.capitalize()} Labelを「{option}」に更新します"
             }
         } for option in options
