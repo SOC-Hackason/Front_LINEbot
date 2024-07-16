@@ -495,7 +495,7 @@ def summary_reply(line_id):
                     "wrap": True,
                     "weight": "bold",
                     "size": "xs",
-                    "maxLines": 2,
+                    "maxLines": 4,
                     "flex": 3,
                 },
                 {
