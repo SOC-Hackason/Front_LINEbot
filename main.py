@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import requests, sys, json, os
+import requests, sys, json, os, datetime
 import linebot
 from dotenv import load_dotenv
 
@@ -36,8 +36,9 @@ def webhook():
         messages = message_reply(user_id, received_message)
     except KeyError:
         postback_data = event["postback"].get("data")
+        postback_params = event["postback"].get("params")
         loading_spinner(user_id)
-        messages = postback_reply(user_id, postback_data)
+        messages = postback_reply(user_id, postback_data, postback_params)
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
 
@@ -101,7 +102,7 @@ def message_reply(user_id, received_message):
 
     return messages
 
-def postback_reply(user_id, postback_data:str):
+def postback_reply(user_id, postback_data:str, postback_params=None):
     if postback_data.startswith("msg_id"):
         msg_id = postback_data.split("=")[1]
         url = BACKEND_URL + "/gmail/emails"
@@ -134,6 +135,26 @@ def postback_reply(user_id, postback_data:str):
         message_id = message_id.split("=")[1]
         new_label = new_label.split("=")[1]
         messages = postback_devl(user_id, action, message_id, new_label)
+    elif postback_data.startswith("配信"):
+        selected_datetime = postback_params['datetime']
+        messages = change_datetime(user_id, selected_datetime)
+    return messages
+
+def change_datetime(user_id, selected_datetime:str):
+    # selected_datetime is like 2024-07-16T15:24
+    date = datetime.datetime.strptime(selected_datetime, "%Y-%m-%dT%H:%M")
+    sys.stdout.flush()
+    hour = date.hour
+    minute = date.minute
+    URL = f"https://mails.amano.mydns.jp/gmail/change_time?line_id={user_id}&hour={hour}&minute={minute}"
+    response = requests.get(URL)
+    data = response.json()
+    messages = [
+        {
+            "type": "text",
+            "text": data["message"],
+        }
+    ]
     return messages
 
 def postback_spaction(user_id, action, msg_ids):
