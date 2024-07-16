@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template, redirect
-import requests, sys, json, os, datetime
+import requests, sys, json, os, datetime, time
 import linebot
 from dotenv import load_dotenv
 
@@ -32,10 +32,6 @@ l.addHandler( logging.FileHandler( "/nul" ))
 timer_start = None
 timer_duration = 0
 
-s = '2024/7/16 16:52'
-s_format = '%Y/%m/%d %H:%M'
-GoOffTime= str(datetime.datetime.strptime(s, s_format))[11:-3]
-
 @app.route('/')
 def index():
     return render_template('timerupdater.html')
@@ -65,8 +61,11 @@ def get_time():
 
 @app.route('/everyminute')
 def everyminute():
-    global GoOffTime
+    global selected_datetime
     global user_id
+
+    s_format = '%Y/%m/%d %H:%M'
+    GoOffTime= str(datetime.datetime.strptime(selected_datetime, s_format))[11:-3]
 
     CurrentTime = str(datetime.datetime.now().strftime(s_format))[11:]
     print("GoOffTime: ", GoOffTime)
@@ -247,6 +246,7 @@ def postback_reply(user_id, postback_data:str, postback_params=None):
         new_label = new_label.split("=")[1]
         messages = postback_devl(user_id, action, message_id, new_label)
     elif postback_data.startswith("配信"):
+        global selected_datetime
         selected_datetime = postback_params['datetime']
         messages = change_datetime(user_id, selected_datetime)
     return messages
