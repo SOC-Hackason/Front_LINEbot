@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template, redirect
-import time, datetime
-import requests, sys, json, os
+import requests, sys, json, os, datetime
+import linebot
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,6 +14,8 @@ ADD_BP = os.getenv("ADD_BP")
 app = Flask(__name__)
 
 BACKEND_URL = "https://mails.amano.mydns.jp"
+LABELS_CATEGORY = ["WORK", "SCHOOL", "APPOINTMENT", "PROMOTIONS", "OTHER"]
+LABELS_IMPORTANCE = ["EMERGENCY", "NORMAL", "GARBAGE"]
 
 blacklist=[]
 
@@ -114,14 +116,16 @@ def webhook():
     reply_token = event.get("replyToken")
     global user_id
     user_id = event["source"].get("userId")
-    
-
+    print(user_id)
+    sys.stdout.flush()
     try:
         received_message = event["message"].get("text")
         messages = message_reply(user_id, received_message)
     except KeyError:
         postback_data = event["postback"].get("data")
-        messages = postback_reply(user_id, postback_data)
+        postback_params = event["postback"].get("params")
+        loading_spinner(user_id)
+        messages = postback_reply(user_id, postback_data, postback_params)
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
 
@@ -160,6 +164,8 @@ def message_reply(user_id, received_message):
     elif received_message == "一覧":
         loading_spinner(user_id)
         messages = list_message(user_id)
+    elif received_message == "ラベリング":
+        messages = label_message(user_id)
     elif received_message == "既読":
         loading_spinner(user_id)
         res = requests.get(
@@ -207,7 +213,7 @@ def message_reply(user_id, received_message):
 
     return messages
 
-def postback_reply(user_id, postback_data:str):
+def postback_reply(user_id, postback_data:str, postback_params=None):
     if postback_data.startswith("msg_id"):
         msg_id = postback_data.split("=")[1]
         url = BACKEND_URL + "/gmail/emails"
@@ -228,11 +234,38 @@ def postback_reply(user_id, postback_data:str):
         action, msg_ids = postback_data.split("=")[1].split("%")
         msg_ids = msg_ids.split(",")
         messages = postback_spaction(user_id, action, msg_ids)
-    elif postback_data.startswith("address"):
-        global blacklist
-        data=postback_data.split("=")[1]
-        blacklist.append(data)
-        messages=1
+    elif postback_data.startswith("dev") and postback_data.count("&") == 1:
+        # split by "&" or "="
+        action, message_id = postback_data.split("&")
+        action = action.split("=")[1]
+        message_id = message_id.split("=")[1]
+        messages = postback_dev(user_id, action, message_id)
+    elif postback_data.startswith("devl"):
+        action, message_id, new_label = postback_data.split("&")
+        action = action.split("=")[1]
+        message_id = message_id.split("=")[1]
+        new_label = new_label.split("=")[1]
+        messages = postback_devl(user_id, action, message_id, new_label)
+    elif postback_data.startswith("配信"):
+        selected_datetime = postback_params['datetime']
+        messages = change_datetime(user_id, selected_datetime)
+    return messages
+
+def change_datetime(user_id, selected_datetime:str):
+    # selected_datetime is like 2024-07-16T15:24
+    date = datetime.datetime.strptime(selected_datetime, "%Y-%m-%dT%H:%M")
+    sys.stdout.flush()
+    hour = date.hour
+    minute = date.minute
+    URL = f"https://mails.amano.mydns.jp/gmail/change_time?line_id={user_id}&hour={hour}&minute={minute}"
+    response = requests.get(URL)
+    data = response.json()
+    messages = [
+        {
+            "type": "text",
+            "text": data["message"],
+        }
+    ]
     return messages
 
 def postback_spaction(user_id, action, msg_ids):
@@ -251,6 +284,8 @@ def flex_one_mail(data, msg_id):
     _to = data["to"]
     _subject = data["subject"]
     _message = data["message"]
+    _importance = data["importance"]
+    _category = data["category"]
 
     bubble = {
         "type": "bubble",
@@ -346,7 +381,8 @@ def flex_one_mail(data, msg_id):
                     "action": {
                         "type": "postback",
                         "label": "返信",
-                        "data": f"action=reply%{msg_id}"
+                        "data": f"action=reply%{msg_id}",
+                        "displayText": "返信を作成します"
                     },
                     "color": "#00B900"
                 },
@@ -357,7 +393,8 @@ def flex_one_mail(data, msg_id):
                     "action": {
                         "type": "postback",
                         "label": "既読",
-                        "data": f"action=read%{msg_id}"
+                        "data": f"action=read%{msg_id}",
+                        "displayText": "既読にします"
                     },
                     "color": "#00B900"
                 },
@@ -401,13 +438,21 @@ def postback_action_reply(user_id, action, msg_id):
     elif action== "read":
         url = BACKEND_URL + "/gmail/read"
         params = {
-            "msg_id": msg_id,
+            "msg_ids": [msg_id],
             "line_id": user_id
         }
         response = requests.get(url, params=params)
         data = response.json()
         return [{"type": "text", "text": "既読にしました"}]
     elif action == "Glink":
+        url = "https://mail.google.com/mail/u/0/#inbox/msg_id"
+        params = {
+            "msg_ids": [msg_id],
+            "line_id": user_id
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        return [{"type": "text", "text": "Gmailアプリの起動"}]
         pass
 
 def create_draft_preview_message(draft_content):
@@ -491,7 +536,8 @@ def list_message(line_id):
                     "action": {
                         "type": "postback",
                         "label": "詳細",
-                        "data": f"msg_id={msg_id}"
+                        "data": f"msg_id={msg_id}",
+                        "displayText": "詳細を表示します"
                     },
                     "style": "primary",
                     "color": "#00B900",
@@ -521,7 +567,8 @@ def list_message(line_id):
                     "action": {
                         "type": "postback",
                         "label": "すべて既読にする",
-                        "data": f"spaction=read_all%{','.join(msg_ids)}"
+                        "data": f"spaction=read_all%{','.join(msg_ids)}",
+                        "displayText": "すべてのメールを既読にします"
                     },
                     "style": "primary",
                     "color": "#00B900",
@@ -577,9 +624,265 @@ def summary_reply(line_id):
     data = response.json()
     summaries = data["message"]
     msg_ids = data["msg_ids"]
-    messages = summary_message(summaries)
+
+    flex_contents = []
+    for summary,msg_id in zip(summaries, msg_ids):
+        flex_contents.append({
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": summary,
+                    "wrap": True,
+                    "weight": "bold",
+                    "size": "xs",
+                    "maxLines": 4,
+                    "flex": 3,
+                },
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "詳細",
+                        "data": f"msg_id={msg_id}"
+                    },
+                    "style": "primary",
+                    "color": "#004aad",
+                    "height": "sm",
+                    "margin": "sm",
+                    "flex": 1,
+                }
+            ],
+            "alignItems": "center",
+            "paddingAll": "sm",
+            "margin": "xs",
+
+        })
+
+    bubble = {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": flex_contents
+        }
+    }
+
+    messages = [
+        {
+            "type": "flex",
+            "altText": "要約一覧",
+            "contents": bubble
+        }
+    ]
+
     return messages
 
+def label_message(line_id, msg_id = None):
+    if msg_id is not None:
+        URL = f"https://mails.amano.mydns.jp/gmail/emails_dev/?line_id={line_id}&msg_id={msg_id}"
+    else:
+        URL = f"https://mails.amano.mydns.jp/gmail/emails_dev/?line_id={line_id}"
+    print(URL)
+    sys.stdout.flush()
+    response = requests.get(URL)
+    msg = response.json()
+    print(msg)
+    sys.stdout.flush()
+    content = {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": f"From: {msg.get('from', 'Unknown')}",
+                    "weight": "bold"
+                },
+                {
+                    "type": "text",
+                    "text": f"To: {msg.get('to', 'Unknown')}"
+                },
+                {
+                    "type": "text",
+                    "text": f"Subject: {msg.get('subject', 'No Subject')}",
+                    "wrap": True
+                },
+                {
+                    "type": "text",
+                    "text": f"Message: {msg.get('message', 'No Message')}",
+                    "wrap": True
+                },
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "Importance:",
+                            "flex": 1
+                        },
+                        {
+                            "type": "text",
+                            "text": msg.get('importance', 'Unknown'),
+                            "flex": 2,
+                            "color": "#1DB446",
+                            "weight": "bold"
+                        }
+                    ]
+                },
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "Contents:",
+                            "flex": 1
+                        },
+                        {
+                            "type": "text",
+                            "text": msg.get('category', 'Unknown'),
+                            "flex": 2,
+                            "color": "#1DB446",
+                            "weight": "bold"
+                        }
+                    ]
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "postback",
+                        "label": "Importance Label修正",
+                        "data": f"dev=correct_importance&message_id={msg.get('id', '')}"
+                    }
+                },
+                {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "postback",
+                        "label": "Contents Label修正",
+                        "data": f"dev=correct_contents&message_id={msg.get('id', '')}"
+                    }
+                },
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "height": "sm",
+                    "action": {
+                        "type": "postback",
+                        "label": "次のメールへ",
+                        "data": f"dev=next_mail&message_id={msg.get('id', '')}"
+                    }
+                }
+            ],
+            "flex": 0
+        }
+    }
+    
+    
+    messages =[ {
+        "type": "flex",
+        "altText": "ラベリング",
+        "contents": content
+    }]
+    
+    return messages
+    
+def postback_dev(user_id, action, message_id):
+    if action == "correct_importance":
+        messages = create_quick_reply(message_id, "importance", LABELS_IMPORTANCE)
+    elif action == "correct_contents":
+        messages = create_quick_reply(message_id, "contents", LABELS_CATEGORY)
+    elif action == "next_mail":
+        messages = label_message(user_id, message_id)
+        
+    return messages
+    
+def create_quick_reply(message_id, label_type, options):
+    items = [
+        {
+            "type": "action",
+            "action": {
+                "type": "postback",
+                "label": option,
+                "data": f"devl={label_type}&message_id={message_id}&new_label={option}",
+                "displayText": f"{label_type.capitalize()} Labelを「{option}」に更新します"
+            }
+        } for option in options
+    ]
+    
+    return [{
+        "type": "text",
+        "text": f"新しいLabelを選択してください：",
+        "quickReply": {
+            "items": items
+        }
+    }]
+
+def postback_devl(user_id, action, message_id, new_label):
+    # send new label to backend
+    url = f"https://mails.amano.mydns.jp/gmail/emails_devl/"
+    index = LABELS_IMPORTANCE.index(new_label) if action == "importance" else LABELS_CATEGORY.index(new_label)
+    data = {
+        "message_id": message_id,
+        "label": index,
+        "label_type": action,
+        "line_id": user_id
+    }
+    response = requests.get(url, params=data)
+    message = {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "ラベルを更新しました。つづいて更新する場合は上のメッセージからお願いします。",
+                    "wrap": True
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "height": "sm",
+                    "action": {
+                        "type": "postback",
+                        "label": "次のメールへ",
+                        "data": f"dev=next_mail&message_id={message_id}"
+                    }
+                }
+            ],
+        }
+    }
+    
+    return [{
+        "type": "flex",
+        "altText": "ラベルを更新しました",
+        "contents": message
+    }]
+    
+    
 def read_message(message):
     messages = [
         {
@@ -615,4 +918,4 @@ def loading_spinner(user_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8000)
+    app.run(debug=True, host="localhost", port=8000)
