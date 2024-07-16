@@ -150,8 +150,7 @@ def postback_reply(user_id, postback_data:str, postback_params=None):
         label_type = label_type.split("=")[1]
         msg_id = msg_id.split("=")[1]
         new_label = new_label.split("=")[1]
-        # TODO: 
-        pass
+        messages = change_label(user_id, label_type, msg_id, new_label)
     elif postback_data.startswith("category"):
         category_id = postback_data.split("=")[1]
         messages = category_reply(user_id, category_id)
@@ -387,16 +386,9 @@ def postback_action_reply(user_id, action, msg_id):
         data = response.json()
         return [{"type": "text", "text": "既読にしました"}]
     elif action == "Glink":
-        url = "https://mail.google.com/mail/u/0/#inbox/msg_id"
-        params = {
-            "msg_ids": [msg_id],
-            "line_id": user_id
-        }
-        response = requests.get(url, params=params)
-        data = response.json()
-        return [{"type": "text", "text": "Gmailアプリの起動"}]
-        pass
-
+        messages = create_gmail_open_link_message(msg_id)
+    return messages
+    
 def create_draft_preview_message(draft_content):
     bubble = {
         "type": "bubble",
@@ -433,8 +425,9 @@ def create_draft_preview_message(draft_content):
                     "action": {
                         "type": "uri",
                         "label": "下書きを編集(Not yet)",
-                        "uri": "https://test.com"
-                    }
+                        "uri": "https://mails.amano.mydns.jp/other/redirect_to_gmail?openExternalBrowser=1",
+                    },
+                    
                 }
             ],
             "flex": 0
@@ -530,6 +523,45 @@ def list_message(line_id):
     ]
 
     return messages
+
+def create_gmail_open_link_message(message_id):
+    # Gmailメッセージのリンクを生成
+    gmail_link = f"https://mails.amano.mydns.jp/other/redirect_to_gmail?openExternalBrowser=1"
+    print(gmail_link)
+    
+    # LINEメッセージのフォーマット
+    message = {
+        "type": "flex",
+        "altText": "Gmailメッセージを開く",
+        "contents": {
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "Gmailメッセージを開きますか？",
+                        "wrap": True,
+                        "weight": "bold",
+                        "size": "lg"
+                    },
+                    {
+                        "type": "button",
+                        "action": {
+                            "type": "uri",
+                            "label": "Gmailで開く",
+                            "uri": gmail_link,
+                        },
+                        "style": "primary",
+                        "margin": "md"
+                    }
+                ]
+            }
+        }
+    }
+    
+    return [message]
            
 def free_message(sentence, line_id):
     url = f"https://mails.amano.mydns.jp/gmail/free_sentence?line_id={line_id}"
@@ -588,6 +620,7 @@ def summary_reply(line_id):
                         "type": "postback",
                         "label": "詳細",
                         "data": f"msg_id={msg_id}",
+                        "displayText": "詳細を表示します"
                     },
                     "style": "primary",
                     "color": "#00B900",
@@ -707,7 +740,8 @@ def label_message(line_id, msg_id = None):
                     "action": {
                         "type": "postback",
                         "label": "Importance Label修正",
-                        "data": f"dev=correct_importance&message_id={msg.get('id', '')}"
+                        "data": f"dev=correct_importance&message_id={msg.get('id', '')}",
+                        "displayText": "Importance Labelを修正します",
                     }
                 },
                 {
@@ -717,7 +751,8 @@ def label_message(line_id, msg_id = None):
                     "action": {
                         "type": "postback",
                         "label": "Contents Label修正",
-                        "data": f"dev=correct_contents&message_id={msg.get('id', '')}"
+                        "data": f"dev=correct_contents&message_id={msg.get('id', '')}",
+                        "displayText": "Contents Labelを修正します",
                     }
                 },
                 {
@@ -727,7 +762,8 @@ def label_message(line_id, msg_id = None):
                     "action": {
                         "type": "postback",
                         "label": "次のメールへ",
-                        "data": f"dev=next_mail&message_id={msg.get('id', '')}"
+                        "data": f"dev=next_mail&message_id={msg.get('id', '')}",
+                        "displayText": "次のメールへ"
                     }
                 }
             ],
@@ -775,6 +811,22 @@ def create_quick_reply(message_id, label_type, options, tag="devl"):
         }
     }]
 
+def change_label(user_id, label_type, message_id, new_label):
+    url = f"https://mails.amano.mydns.jp/gmail/change_label/"
+    index = LABELS_IMPORTANCE.index(new_label) if label_type == "importance" else LABELS_CATEGORY.index(new_label)
+    params = {
+        "msg_id": message_id,
+        "label": index,
+        "label_type": label_type,
+        "line_id": user_id
+    }
+    response = requests.get(url, params=params)
+    message = {
+        "type": "text",
+        "text": response.text
+    }
+    return [message]
+
 def postback_devl(user_id, action, message_id, new_label):
     # send new label to backend
     url = f"https://mails.amano.mydns.jp/gmail/emails_devl/"
@@ -811,7 +863,8 @@ def postback_devl(user_id, action, message_id, new_label):
                     "action": {
                         "type": "postback",
                         "label": "次のメールへ",
-                        "data": f"dev=next_mail&message_id={message_id}"
+                        "data": f"dev=next_mail&message_id={message_id}",
+                        "displayText": "次のメールへ"
                     }
                 }
             ],
@@ -975,7 +1028,8 @@ def category_reply(user_id, category_id):
                                     "type": "postback",
                                     "label": "一覧",
                                     "label": "選択",
-                                    "data": "importance=1"
+                                    "data": "importance=1",
+                                    "displayText": "重要度を選択",
                                 },
                                 "style": "primary",
                                 "color": "#00B900",
