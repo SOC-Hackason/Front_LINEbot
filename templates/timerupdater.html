@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timer App</title>
 </head>
-<body onload="startTimer(30)">
-    <h1>Timer App</h1>
-    <input type="number" id="timerInput" placeholder="Enter seconds">
-    <button onclick="startTimer()">Start Timer</button>
+<body onload="startTimer(60)">
+    <h1>Seconds until timer in flask updates:</h1>
     <h2 id="timerDisplay">00:00</h2>
 
     <script>
         function startTimer(sec) {
-            const btn_seconds = document.getElementById('timerInput').value;
             const seconds=sec
             fetch(`/start/${seconds}`)
                 .then(response => response.json())
@@ -37,6 +34,11 @@
                     if (timeLeft > 0) {
                         setTimeout(updateTimer, 100);
                     }
+                    if (timeLeft == 0){
+                        setTimeout(startTimer(60), 100);
+                        fetch('/everyminute');
+                    }
+                    
                 });
         }
     </script>
@@ -44,19 +46,15 @@
 </html>
 
 <!--
-4. アプリケーションを実行します：
-```
-python app.py
-```
-
-このアプリケーションでは、以下の機能が実装されています：
-
-- ユーザーがタイマーの秒数を入力し、"Start Timer"ボタンをクリックしてタイマーを開始できます。
-- サーバーサイドでタイマーの開始時間と持続時間を管理します。
-- クライアントサイドのJavaScriptが定期的にサーバーに残り時間を問い合わせ、表示を更新します。
+タイマー関数のためのHTML
+flaskで非同期処理やるのが難しかったのでこのhtmlのページを立ち上げて．HTML側でループを回す
+1秒ごとにflaskに問い合わせ，1分経過したらflask側の時刻（分）を更新
+flask側では時刻が設定済みの時刻と一致したらタイマーが作動するようになってる
 
 javascript側で再帰構造のループ回して秒数アップデートしてる
 onloadでhtmlページ読み込み完了時に関数が実行できるのでこれ使う
+fetch：バックエンドのページにデータ問い合わせ　flaskが返す　非同期処理
+.then()：非同期処理が成功したときに実行する処理　ここでflaskから帰ってきたデータを受け取り
+setTimeout(func, millisec):ミリ秒後に関数を実行
 
-この基本的な実装を拡張して、一時停止、リセット、複数のタイマーの管理などの機能を追加することができます。また、WebSocketsを使用してリアルタイムの更新を実装することで、より効率的なアプリケーションにすることもできます。
 -->
