@@ -80,6 +80,8 @@ def message_reply(user_id, received_message):
         messages = label_message(user_id)
     elif received_message == "分類":
         pass
+    elif received_message =="分類":
+        messages = class_reply(user_id)
     elif received_message == "既読":
         res = requests.get(
             f"https://mails.amano.mydns.jp/gmail/emails/read?line_id={user_id}"
@@ -152,6 +154,9 @@ def postback_reply(user_id, postback_data:str, postback_params=None):
         new_label = new_label.split("=")[1]
         # TODO: 
         pass
+    elif postback_data.startswith("category"):
+        category_id = postback_data.split("=")[1]
+        messages = category_reply(user_id, category_id)
     return messages
 
 def change_datetime(user_id, selected_datetime:str):
@@ -584,10 +589,10 @@ def summary_reply(line_id):
                     "action": {
                         "type": "postback",
                         "label": "詳細",
-                        "data": f"msg_id={msg_id}"
+                        "data": f"msg_id={msg_id}",
                     },
                     "style": "primary",
-                    "color": "#004aad",
+                    "color": "#00B900",
                     "height": "sm",
                     "margin": "sm",
                     "flex": 1,
@@ -822,6 +827,386 @@ def postback_devl(user_id, action, message_id, new_label):
     }]
     
     
+def class_reply(line_id):
+    flex_contents = [
+        {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "重要度",
+                    "wrap": True,
+                    "weight": "bold",
+                    "size": "sm",
+                    "flex": 3,
+                },
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "選択",
+                        "data": "category=1",
+                        "displayText":"重要度を選択"
+                    },
+                    "style": "primary",
+                    "color": "#00B900",
+                    "height": "sm",
+                    "flex": 1,
+                }
+            ],
+            "margin": "md"
+        },
+        {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "カテゴリ",
+                    "wrap": True,
+                    "weight": "bold",
+                    "size": "sm",
+                    "flex": 3,
+                },
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "選択",
+                        "data": "category=2",
+                        "displayText":"カテゴリを選択"
+                    },
+                    "style": "primary",
+                    "color": "#00B900",
+                    "height": "sm",
+                    "flex": 1,
+                }
+            ],
+            "margin": "md"
+        }
+    ]
+
+    bubble = {
+        "type": "bubble",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "分類カテゴリの選択",
+                    "weight": "bold",
+                    "size": "lg",
+                    "wrap": True
+                }
+            ],
+            "backgroundColor": "#EEEEEE",
+            "paddingAll": "md"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": flex_contents
+        }
+    }
+
+    messages = [
+        {
+            "type": "flex",
+            "altText": "分類カテゴリの選択",
+            "contents": bubble
+        }
+    ]
+
+    return messages
+
+def category_reply(user_id, category_id):
+    if category_id == "1":
+        flex_contents = [
+            {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "重要度",
+                        "weight": "bold",
+                        "size": "lg",
+                        "wrap": True,
+                        "margin": "sm" 
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "contents": [
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png"
+                                    },
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png"
+                                    },
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "めちゃ大事！",
+                                        "size": "sm",
+                                        "color": "#8c8c8c",
+                                        "weight": "bold",
+                                        "margin": "md",
+                                        "flex": 1
+                                    }
+                                ],
+                                "flex": 4
+                            },
+                            {
+                                "type": "button",
+                                "action": {
+                                    "type": "postback",
+                                    "label": "一覧",
+                                    "label": "選択",
+                                    "data": "importance=1"
+                                },
+                                "style": "primary",
+                                "color": "#00B900",
+                                "height": "sm",
+                                "flex": 1
+                            }
+                        ]
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "contents": [
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png"
+                                    },
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png"
+                                    },
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://via.placeholder.com/28x28/FFFFFF/FFFFFF"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "ふつう",
+                                        "size": "sm",
+                                        "color": "#8c8c8c",
+                                        "weight": "bold",
+                                        "margin": "md",
+                                        "flex": 1
+                                    }
+                                ],
+                                "flex": 4
+                            },
+                            {
+                                "type": "button",
+                                "action": {
+                                    "type": "postback",
+                                    "label": "一覧",
+                                    "label": "選択",
+                                    "data": "importance=2"
+                                },
+                                "style": "primary",
+                                "color": "#00B900",
+                                "height": "sm",
+                                "flex": 1
+                            }
+                        ],
+                        "alignItems": "center"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "contents": [
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png"
+                                    },
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://via.placeholder.com/28x28/FFFFFF/FFFFFF"
+                                    },
+                                    {
+                                        "type": "icon",
+                                        "size": "md",
+                                        "url": "https://via.placeholder.com/28x28/FFFFFF/FFFFFF"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "ごみ",
+                                        "size": "sm",
+                                        "color": "#8c8c8c",
+                                        "weight": "bold",
+                                        "margin": "md",
+                                        "flex": 1
+                                    }
+                                ],
+                                "flex": 4
+                            },
+                            {
+                                "type": "button",
+                                "action": {
+                                    "type": "postback",
+                                    "label": "一覧",
+                                    "label": "選択",
+                                    "data": "importance=3"
+                                },
+                                "style": "primary",
+                                "color": "#00B900",
+                                "height": "sm",
+                                "flex": 1
+                            }
+                        ],
+                        "alignItems": "center"
+                    }
+                ],
+                "spacing": "md",
+                "paddingAll": "9px"
+            }
+        ]
+
+        bubble = {
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": flex_contents
+            }
+        }
+
+        messages = [
+            {
+                "type": "flex",
+                "altText": "カテゴリ1の重要度",
+                "contents": bubble
+            }
+        ]
+
+        return messages
+
+    elif category_id == "2":
+        flex_contents = [
+            {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "カテゴリ2のアイテム1",
+                        "wrap": True,
+                        "weight": "bold",
+                        "size": "sm",
+                        "flex": 3,
+                    },
+                    {
+                        "type": "button",
+                        "action": {
+                            "type": "postback",
+                            "label": "詳細",
+                            "data": "item=3"
+                        },
+                        "style": "primary",
+                        "color": "#00B900",
+                        "height": "sm",
+                        "flex": 1,
+                    }
+                ],
+                "margin": "md"
+            },
+            {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "カテゴリ2のアイテム2",
+                        "wrap": True,
+                        "weight": "bold",
+                        "size": "sm",
+                        "flex": 3,
+                    },
+                    {
+                        "type": "button",
+                        "action": {
+                            "type": "postback",
+                            "label": "詳細",
+                            "data": "item=4"
+                        },
+                        "style": "primary",
+                        "color": "#00B900",
+                        "height": "sm",
+                        "flex": 1,
+                    }
+                ],
+                "margin": "md"
+            }
+        ]
+
+        bubble = {
+            "type": "bubble",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "カテゴリ2のアイテム",
+                        "weight": "bold",
+                        "size": "lg",
+                        "wrap": True
+                    }
+                ],
+                "backgroundColor": "#EEEEEE",
+                "paddingAll": "md"
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": flex_contents
+            }
+        }
+
+        messages = [
+            {
+                "type": "flex",
+                "altText": "カテゴリ2のアイテム",
+                "contents": bubble
+            }
+        ]
+
+        return messages
+
+
+
 def read_message(message):
     messages = [
         {
