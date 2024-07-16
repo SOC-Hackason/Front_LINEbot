@@ -1,3 +1,5 @@
+#タイマー機能テスト用．もう使わないので要らないです
+
 from flask import Flask, render_template, jsonify
 import time, datetime
 import logging

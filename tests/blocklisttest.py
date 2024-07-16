@@ -1,3 +1,5 @@
+#ブロックリストテスト用　テスト済みなのでもう使わないです
+
 from app.env_KF import *
 import json, os
 from flask import Flask, request, abort

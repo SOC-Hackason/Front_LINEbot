@@ -1,33 +1,105 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect
+import time, datetime
 import requests, sys, json, os
-import linebot
 from dotenv import load_dotenv
-from linebot import LineBotApi, WebhookHandler
-from linebot.models import MessageEvent, PostbackEvent, TextMessage, FlexSendMessage, TextSendMessage
-import asyncio
-from SummaryTimer import summary_timer
-
-#ngrokサーバ個人CH開発時はここをコメントアウト
 
 load_dotenv()
 CHANNEL_TOKEN = os.getenv("CHANNEL_TOKEN")
 CHANNEL_SECRET = os.getenv("CHANNEL_SECRET")
 REPLY_URL = os.getenv("REPLY_URL")
+PUSH_URL = os.getenv("PUSH_URL")
 ADD_BP = os.getenv("ADD_BP")
 
 
 app = Flask(__name__)
 
 BACKEND_URL = "https://mails.amano.mydns.jp"
-line_bot_api = LineBotApi(CHANNEL_TOKEN)
-handler = WebhookHandler(CHANNEL_SECRET)
 
 blacklist=[]
 
-#Flaskの書き方
-@app.route("/")
-def hello():
-    return "Hello, World!"
+#タイマー関数のせいでうるさくなったログを非表示にするコード
+"""
+import logging
+l = logging.getLogger()
+l.addHandler( logging.FileHandler( "/nul" ))
+"""
+
+
+#タイマー機能のせいでログがめっちゃうるさいので開発時はコメントアウトしてもらっていいです
+#スタート時刻と測る時間
+timer_start = None
+timer_duration = 0
+
+s = '2024/7/16 16:52'
+s_format = '%Y/%m/%d %H:%M'
+GoOffTime= str(datetime.datetime.strptime(s, s_format))[11:-3]
+
+@app.route('/')
+def index():
+    return render_template('timerupdater.html')
+
+#タイマーがスタート状態になるjsonを返す
+@app.route('/start/<int:seconds>')
+def start_timer(seconds):
+    global timer_start, timer_duration
+    #現在時刻を取得
+    timer_start = time.time()
+    timer_duration = seconds
+    #状態をstartedに変更
+    return jsonify({"status": "started"})
+
+
+#残り時間を返す
+@app.route('/get_time')
+def get_time():
+    if timer_start is None:
+        return jsonify({"time_left": 0})
+    #経過時間の計算
+    elapsed = time.time() - timer_start
+    #残り時間の計算，秒に丸め　time()はデフォで秒数数え
+    time_left = max(timer_duration - elapsed, 0)
+    return jsonify({"time_left": round(time_left, 1)})
+
+
+@app.route('/everyminute')
+def everyminute():
+    global GoOffTime
+    global user_id
+
+    CurrentTime = str(datetime.datetime.now().strftime(s_format))[11:]
+    print("GoOffTime: ", GoOffTime)
+    print("CurrentTime: ", CurrentTime)
+
+    if(GoOffTime == CurrentTime):
+        print("Timer went off")
+        try:
+            messages=message_reply(user_id, received_message = "要約")
+        except KeyError:
+            print("keyerror")
+
+        headers = {
+            "Content-Type": "application/json; charset=UTF-8",
+            "Authorization": f"Bearer {CHANNEL_TOKEN}",
+        }
+
+        payload = {
+            "to": user_id,
+            "messages": messages,
+        }
+
+        response = requests.post(PUSH_URL, headers=headers, json=payload)
+
+        if response.status_code != 200:
+            print("LINE_ERROR")
+            print(response.text)
+            sys.stdout.flush()
+            return jsonify({"status": "error", "detail": response.text}), 500
+
+        return jsonify({"status": "success"}), 200
+    
+    return jsonify({"flask_timer": "updated"})
+#タイマー機能ここまで
+
 
 #LINEプラットフォームがwebhook URLのサーバにアクセスしたときにこのプログラムがサーバに返す関数
 @app.route("/webhook", methods=["POST"])
@@ -38,15 +110,11 @@ def webhook():
         return jsonify({"status": "no events"}), 200
 
     event = events[0]
+    global reply_token
     reply_token = event.get("replyToken")
+    global user_id
     user_id = event["source"].get("userId")
-
-    """
-    #timer.pyでsummary_messageを呼び出すために，最後にアクセスしたlineidを一時保存
-    #lineid.txtは機密なので絶対にgitignoreに入れてくれ
-    with open (os.path.join(os.path.dirname(__file__), "lineid.txt"), "w") as file:
-        file.write(user_id)
-    """
+    
 
     try:
         received_message = event["message"].get("text")
@@ -130,7 +198,7 @@ def message_reply(user_id, received_message):
         messages = [
             {
                 "type": "text",
-                "text": "sakenomita",
+                "text": "welcome to KFch",
             }
         ]
     else:
@@ -547,15 +615,4 @@ def loading_spinner(user_id):
 
 
 if __name__ == "__main__":
-    async def start_timer():
-        print("starting timer")
-        summary_timer(15)
-        task = asyncio.create_task(main())
-        
-
-    async def main():
-        print("starting flask")
-        app.run(debug=True, host="0.0.0.0", port=8000)
-
-    # イベントループを開始
-    asyncio.run(start_timer())
+    app.run(debug=True, host="0.0.0.0", port=8000)
