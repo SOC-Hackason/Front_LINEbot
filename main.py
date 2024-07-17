@@ -186,24 +186,47 @@ def postback_spaction(user_id, action, msg_ids):
 
 def flex_one_mail(data, msg_id):
     _from = data["from"]
+    _from = _from.split("<")[0]
     _to = data["to"]
     _subject = data["subject"]
     _message = data["message"]
     _importance = data["importance"]
     _category = data["category"]
+    _importance_index = 3 - LABELS_IMPORTANCE.index(_importance)
 
     bubble = {
         "type": "bubble",
+        "styles": {
+            "body": {
+                "separator": True,
+                "separatorColor": "#DDDDDD"
+            }
+        },
         "header": {
             "type": "box",
-            "layout": "vertical",
+            "layout": "horizontal",
             "contents": [
                 {
                     "type": "text",
                     "text": _subject,
+                    "maxLines": 3,
                     "weight": "bold",
                     "size": "lg",
-                    "wrap": True
+                    "wrap": True,
+                    "flex": 3
+                },
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "alignItems": "center",
+                    "contents": [
+                        {
+                            "type": "image",
+                            "url": "https://developers-resource.landpress.line.me/fx/img/review_gold_star_28.png",
+                            "size": "30px"
+                        }
+                        for _ in range(_importance_index)
+                    ],
                 }
             ],
             "backgroundColor": "#EEEEEE",
@@ -821,11 +844,14 @@ def change_label(user_id, label_type, message_id, new_label):
         "line_id": user_id
     }
     response = requests.get(url, params=params)
+    response = response.json()
+
     message = {
         "type": "text",
-        "text": response.text
+        "text": response["message"]
     }
     return [message]
+
 
 def postback_devl(user_id, action, message_id, new_label):
     # send new label to backend
