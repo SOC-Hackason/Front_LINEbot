@@ -1,0 +1,82 @@
+//{
+//    "richMenuId": "richmenu-3b5184d398fad6c945d97126960200f5"
+//}
+
+{
+  "size": {
+    "width": 1682,
+    "height": 1134
+  },
+  "selected": true,
+  "name": "richmenuA",
+  "chatBarText": "メニュー",
+  "areas": [
+    {
+      "bounds": {
+        "x": 34,
+        "y": 37,
+        "width": 1230,
+        "height": 568
+      },
+      "action": {
+        "type": "message",
+        "label": "未読表示",
+        "text": "一覧"
+      }
+    },
+    {
+      "bounds": {
+        "x": 37,
+        "y": 622,
+        "width": 791,
+        "height": 478
+      },
+      "action": {
+        "type": "message",
+        "label": "要約表示",
+        "text": "要約"
+      }
+    },
+    {
+      "bounds": {
+        "x": 854,
+        "y": 625,
+        "width": 796,
+        "height": 478
+      },
+      "action": {
+        "type": "message",
+        "label": "分類",
+        "text": "分類"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1293,
+        "y": 37,
+        "width": 355,
+        "height": 273
+      },
+      "action": {
+        "type": "richmenuswitch",
+        "data": "setting",
+        "label": "リッチメニュー切り替え",
+        "richMenuAliasId": "richmenu-b"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1301,
+        "y": 336,
+        "width": 347,
+        "height": 268
+      },
+      "action": {
+        "type": "message",
+        "label": "how to use",
+        "text": "使い方"
+      }
+    }
+  ]
+}
+

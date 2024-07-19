@@ -1,0 +1,82 @@
+//{
+//    "richMenuId": "richmenu-7acc8baff578f4faf74dfb1f121ec0b0"
+//}
+
+{
+  "size": {
+    "width": 1612,
+    "height": 1086
+  },
+  "selected": true,
+  "name": "richmenuB",
+  "chatBarText": "メニュー",
+  "areas": [
+    {
+      "bounds": {
+        "x": 35,
+        "y": 43,
+        "width": 761,
+        "height": 385
+      },
+      "action": {
+        "type": "message",
+        "label": "Authorization",
+        "text": "認証"
+      }
+    },
+    {
+      "bounds": {
+        "x": 821,
+        "y": 43,
+        "width": 761,
+        "height": 398
+      },
+      "action": {
+        "type": "message",
+        "label": "language",
+        "text": "言語を設定"
+      }
+    },
+    {
+      "bounds": {
+        "x": 30,
+        "y": 458,
+        "width": 753,
+        "height": 390
+      },
+      "action": {
+        "type": "datetimepicker",
+        "data": "datetime",
+        "label": "配信時刻の設定",
+        "mode": "datetime"
+      }
+    },
+    {
+      "bounds": {
+        "x": 816,
+        "y": 456,
+        "width": 763,
+        "height": 398
+      },
+      "action": {
+        "type": "message",
+        "label": "blocking",
+        "text": "メールをブロック"
+      }
+    },
+    {
+      "bounds": {
+        "x": 398,
+        "y": 877,
+        "width": 819,
+        "height": 164
+      },
+      "action": {
+        "type": "richmenuswitch",
+        "data": "back",
+        "label": "back",
+        "richMenuAliasId": "richmenu-a"
+      }
+    }
+  ]
+}
