@@ -37,7 +37,8 @@ def webhook():
     except KeyError:
         postback_data = event["postback"].get("data")
         postback_params = event["postback"].get("params")
-        loading_spinner(user_id)
+        if not postback_data.startswith("setting") and not postback_data.startswith("back"):
+            loading_spinner(user_id)
         messages = postback_reply(user_id, postback_data, postback_params)
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
@@ -142,7 +143,7 @@ def postback_reply(user_id, postback_data:str, postback_params=None):
         message_id = message_id.split("=")[1]
         new_label = new_label.split("=")[1]
         messages = postback_devl(user_id, action, message_id, new_label)
-    elif postback_data.startswith("配信"):
+    elif postback_data.startswith("datetime"):
         selected_datetime = postback_params['datetime']
         messages = change_datetime(user_id, selected_datetime)
     elif postback_data.startswith("label"):
