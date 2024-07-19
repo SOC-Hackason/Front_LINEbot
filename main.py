@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import requests, sys, json, os, datetime
 import linebot
 from dotenv import load_dotenv
-
+from app.jsons import *
 load_dotenv()
 CHANNEL_TOKEN = os.getenv("CHANNEL_TOKEN")
 REPLY_URL = os.getenv("REPLY_URL")
@@ -92,12 +92,17 @@ def message_reply(user_id, received_message):
             }
         ]
     elif received_message == "version":
+
         messages = [
             {
                 "type": "text",
                 "text": "sakenomitai",
             }
         ]
+    elif received_message == "before_block":
+        messages = before_block_reply(user_id)
+    elif received_message == "list_block":
+        messages = list_block_reply(user_id)
     else:
         # get 
         messages = free_message(received_message, user_id)
@@ -154,7 +159,63 @@ def postback_reply(user_id, postback_data:str, postback_params=None):
     elif postback_data.startswith("category"):
         category_id = postback_data.split("=")[1]
         messages = category_reply(user_id, category_id)
+    # show recent address
+    elif postback_data.startswith("before_block"):
+        messages = before_block_reply(user_id)
+    # unblock={address}
+    elif postback_data.startswith("unblock"):
+        unblockaddress = postback_data.split("=")[1]
+        unblockaddress, address =  unblockaddress.split("&")
+        messages = unblock_reply(user_id, unblockaddress, address)
+    # block={address}
+    elif postback_data.startswith("block"):
+        blockaddress = postback_data.split("=")[1]
+        blockaddress, address = blockaddress.split("&")
+        messages = block_reply(user_id, blockaddress, address)
+    elif postback_data.startswith("list_block"):
+        messages = list_block_reply(user_id)
     return messages
+
+def before_block_reply(user_id):
+    url = BACKEND_URL + "/gmail/recent_addresses"
+    params = {
+        "line_id": user_id
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    addresses = data["message"]
+    return recent_address(addresses)
+
+def block_reply(user_id, blockaddress, address):
+    url = BACKEND_URL + "/gmail/block_address"
+    params = {
+        "line_id": user_id,
+        "address": blockaddress,
+        "addressname": address
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    return [{"type": "text", "text":f"{blockaddress}をブロックしました"}]
+
+def unblock_reply(user_id, unblockaddress, address):
+    url = BACKEND_URL + "/gmail/unblock_address"
+    params = {
+        "line_id": user_id,
+        "address": unblockaddress
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    return [{"type": "text", "text":f"{address}をブロック解除しました"}]
+
+def list_block_reply(user_id):
+    url = BACKEND_URL + "/gmail/block_address_list"
+    params = {
+        "line_id": user_id
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    addresses = data["message"]
+    return recent_address(addresses, unblock=True)
 
 def change_datetime(user_id, selected_datetime:str):
     # selected_datetime is like 2024-07-16T15:24
