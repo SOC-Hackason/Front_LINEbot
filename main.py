@@ -248,7 +248,7 @@ def get_importance_message(user_id, importance=None, category=None):
                         "displayText": "詳細を表示します"
                     },
                     "style": "primary",
-                    "color": "#00B900",
+                    "color": "#673B4D",
                     "height": "sm",
                     "margin": "sm",
                     "flex": 1,
@@ -299,7 +299,7 @@ def get_importance_message(user_id, importance=None, category=None):
                         "displayText": "すべてのメールを既読にします"
                     },
                     "style": "primary",
-                    "color": "#00B900",
+                    "color": "#673B4D",
                     "height": "sm"
                 }
             ],
@@ -528,7 +528,7 @@ def flex_one_mail(data, msg_id):
                             "data": f"action=reply%{msg_id}",
                             "displayText": "返信を作成します"
                         },
-                        "color": "#00B900"
+                        "color": "#673B4D"
                     },
                     {
                         "type": "button",
@@ -540,7 +540,7 @@ def flex_one_mail(data, msg_id):
                             "data": f"action=read%{msg_id}",
                             "displayText": "既読にします"
                         },
-                        "color": "#00B900"
+                        "color": "#673B4D"
                     },
                     {
                         "type": "button",
@@ -551,7 +551,7 @@ def flex_one_mail(data, msg_id):
                             "label": "GLinK",
                             "data": f"action=Glink%{msg_id}"
                         },
-                        "color": "#00B900"
+                        "color": "#673B4D"
                     },
                     ],
                 },
@@ -710,7 +710,7 @@ def list_message(line_id):
                         "displayText": "詳細を表示します"
                     },
                     "style": "primary",
-                    "color": "#00B900",
+                    "color": "#673B4D",
                     "height": "sm",
                     "margin": "sm",
                     "flex": 1,
@@ -741,7 +741,7 @@ def list_message(line_id):
                         "displayText": "すべてのメールを既読にします"
                     },
                     "style": "primary",
-                    "color": "#00B900",
+                    "color": "#673B4D",
                     "height": "sm"
                 }
             ],
@@ -846,7 +846,7 @@ def summary_reply(line_id):
                     "wrap": True,
                     "weight": "bold",
                     "size": "xs",
-                    "maxLines": 4,
+                    "maxLines": 6,
                     "flex": 3,
                 },
                 {
@@ -858,7 +858,7 @@ def summary_reply(line_id):
                         "displayText": "詳細を表示します"
                     },
                     "style": "primary",
-                    "color": "#00B900",
+                    "color": "#673B4D",
                     "height": "sm",
                     "margin": "sm",
                     "flex": 1,
@@ -890,7 +890,7 @@ def summary_reply(line_id):
                         "displayText": "すべてのメールを既読にします"
                     },
                     "style": "primary",
-                    "color": "#00B900",
+                    "color": "#673B4D",
                     "height": "sm"
                 }
             ],
@@ -1159,7 +1159,7 @@ def class_reply(line_id):
                         "displayText":"重要度を選択"
                     },
                     "style": "primary",
-                    "color": "#00B900",
+                    "color": "#673B4D",
                     "height": "sm",
                     "flex": 1,
                 }
@@ -1187,7 +1187,7 @@ def class_reply(line_id):
                         "displayText":"カテゴリを選択"
                     },
                     "style": "primary",
-                    "color": "#00B900",
+                    "color": "#673B4D",
                     "height": "sm",
                     "flex": 1,
                 }
@@ -1290,7 +1290,7 @@ def category_reply(user_id, category_id):
                                     "displayText": "重要度を選択",
                                 },
                                 "style": "primary",
-                                "color": "#00B900",
+                                "color": "#673B4D",
                                 "height": "sm",
                                 "flex": 2
                             }
@@ -1340,7 +1340,7 @@ def category_reply(user_id, category_id):
                                     "data": "importance=2"
                                 },
                                 "style": "primary",
-                                "color": "#00B900",
+                                "color": "#673B4D",
                                 "height": "sm",
                                 "flex": 2
                             }
@@ -1391,7 +1391,7 @@ def category_reply(user_id, category_id):
                                     "data": "importance=3"
                                 },
                                 "style": "primary",
-                                "color": "#00B900",
+                                "color": "#673B4D",
                                 "height": "sm",
                                 "flex": 2
                             }
@@ -1416,7 +1416,7 @@ def category_reply(user_id, category_id):
         messages = [
             {
                 "type": "flex",
-                "altText": "カテゴリ1の重要度",
+                "altText": "重要度の選択",
                 "contents": bubble
             }
         ]
@@ -1449,7 +1449,7 @@ def category_reply(user_id, category_id):
                             "displayText":f"{category}を選択"
                         },
                         "style": "primary",
-                        "color": "#00B900",
+                        "color": "#673B4D",
                         "height": "sm",
                         "flex": 1,
                         "gravity": "center",
@@ -1468,7 +1468,7 @@ def category_reply(user_id, category_id):
                 "contents": [
                     {
                         "type": "text",
-                        "text": "カテゴリ2のアイテム",
+                        "text": "カテゴリ",
                         "weight": "bold",
                         "size": "lg",
                         "wrap": True
@@ -1487,7 +1487,7 @@ def category_reply(user_id, category_id):
         messages = [
             {
                 "type": "flex",
-                "altText": "カテゴリ2のアイテム",
+                "altText": "カテゴリの選択",
                 "contents": bubble
             }
         ]
