@@ -78,7 +78,9 @@ def message_reply(user_id, received_message):
         loading_spinner(user_id)
         messages = summary_reply(user_id)
         # 1/5の確率で広告を表示
-        if random.randint(1, 5) == 1:
+        if random.randint(1, 2) == 1:
+            messages += ads_message()
+        else:
             messages += ads_message()
     elif received_message == "広告":
         messages = ads_message()

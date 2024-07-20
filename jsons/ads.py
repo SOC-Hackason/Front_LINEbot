@@ -1,16 +1,40 @@
+import random
+
 def ads_message():
-    # video source from https://i.ytimg.com/an_webp/esYojk39qgQ/mqdefault_6s.webp?du=3000&sqp=COCt7bQG&rs=AOn4CLAti_qXNC2TFeW0SF7x-1VBt7_eGA
+    # video source from 
+
+    if random.randint(0, 1) == 0:
+        url = "https://mails.amano.mydns.jp/static/valorant.mp4"
+        preurl = "https://mails.amano.mydns.jp/static/valorant.jpg"
+        jump_url = "https://playvalorant.com/ja-jp/"
+    else:
+        url = "https://mails.amano.mydns.jp/static/cats.mp4"
+        preurl = "https://mails.amano.mydns.jp/static/cats.png"
+        jump_url = "https://catmocha.jp/"
+        
     bubble = {
         "type": "bubble",
+        "size": "kilo",
         "hero": {
-            "type": "image",
-            "url": "https://i.ytimg.com/an_webp/esYojk39qgQ/mqdefault_6s.webp?du=3000&sqp=COCt7bQG&rs=AOn4CLAti_qXNC2TFeW0SF7x-1VBt7_eGA",
-            "size": "full",
-            "aspectRatio": "20:13",
-            "aspectMode": "cover",
+            "type": "video",
+            "url": url,
+            "previewUrl": preurl,
             "action": {
                 "type": "uri",
-                "uri": "https://www.agaskin.net/clinic/"
+                "uri": jump_url,
+                "label": "jump"
+            },
+            "altContent": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "Click here to jump",
+                        "align": "center",
+                        "color": "#ffffff"
+                    }
+                ]
             }
         },
     }
