@@ -39,7 +39,9 @@ def webhook():
         postback_params = event["postback"].get("params")
         if not postback_data.startswith("setting") and not postback_data.startswith("back"):
             loading_spinner(user_id)
-        messages = postback_reply(user_id, postback_data, postback_params)
+            messages = postback_reply(user_id, postback_data, postback_params)
+        else:
+            return jsonify({"status": "success"}), 200
     if not reply_token:
         return jsonify({"status": "no reply token"}), 200
 
@@ -104,6 +106,10 @@ def message_reply(user_id, received_message):
         messages = before_block_reply(user_id)
     elif received_message == "list_block":
         messages = list_block_reply(user_id)
+    elif received_message == "メールをブロック":
+        messages = block_unblock_message()
+    elif received_message == "言語を設定":
+        messages = language_setting()
     else:
         # get 
         messages = free_message(received_message, user_id)
@@ -175,6 +181,134 @@ def postback_reply(user_id, postback_data:str, postback_params=None):
         messages = block_reply(user_id, blockaddress, address)
     elif postback_data.startswith("list_block"):
         messages = list_block_reply(user_id)
+    elif postback_data.startswith("lang"):
+        lang = postback_data.split("=")[1]
+        messages = set_language(user_id, lang)
+    elif postback_data.startswith("importance"):
+        importance = postback_data.split("=")[1]
+        messages = get_importance_message(user_id, importance, None)
+    elif postback_data.startswith("ccategory"):
+        category = postback_data.split("=")[1]
+        messages = get_importance_message(user_id, None, category=category)
+    return messages
+
+def get_importance_message(user_id, importance=None, category=None):
+    if importance is not None:
+        label = LABELS_IMPORTANCE[int(importance) - 1]
+        url = BACKEND_URL + "/gmail/titles_importance"
+        params = {
+            "line_id": user_id,
+            "max_results": 12,
+            "importance": label
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        titles = data["message"]
+        msg_ids = data["msg_ids"]
+    if category is not None:
+        label = LABELS_CATEGORY[int(category)]
+        url = BACKEND_URL + "/gmail/titles_content"
+        params = {
+            "line_id": user_id,
+            "max_results": 12,
+            "content": label
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        titles = data["message"]
+        msg_ids = data["msg_ids"]
+
+    flex_contents = []
+    for title, msg_id in zip(titles, msg_ids):
+        flex_contents.append({
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": title + " ",
+                    "wrap": True,
+                    "weight": "bold",
+                    "size": "xs",
+                    "maxLines": 2,
+                    "flex": 3,
+                },
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "詳細",
+                        "data": f"msg_id={msg_id}",
+                        "displayText": "詳細を表示します"
+                    },
+                    "style": "primary",
+                    "color": "#00B900",
+                    "height": "sm",
+                    "margin": "sm",
+                    "flex": 1,
+                }
+            ],
+            "alignItems": "center",
+            "paddingAll": "sm",
+            "margin": "xs",
+        })
+
+    bubble = {
+        "type": "bubble",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": f"{label}メール一覧",
+                    "weight": "bold",
+                    "size": "xl",
+                    "align": "center",
+                    "margin": "xs",
+                },
+                {
+                    "type": "separator",
+                    "margin": "xs",
+                    "color": "#000000"
+                }
+            ]
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": flex_contents,
+            "paddingTop": "0px"
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "すべて既読にする",
+                        "data": f"spaction=read_all%{','.join(msg_ids)}",
+                        "displayText": "すべてのメールを既読にします"
+                    },
+                    "style": "primary",
+                    "color": "#00B900",
+                    "height": "sm"
+                }
+            ],
+            "margin": "sm"
+        }
+    }
+
+    messages = [
+        {
+            "type": "flex",
+            "altText": "メール一覧",
+            "contents": bubble
+        }
+    ]
+
     return messages
 
 def before_block_reply(user_id):
@@ -216,6 +350,8 @@ def list_block_reply(user_id):
     response = requests.get(url, params=params)
     data = response.json()
     addresses = data["message"]
+    if len(addresses) == 0:
+        return [{"type": "text", "text": "ブロック中のメールアドレスはありません"}]
     return recent_address(addresses, unblock=True)
 
 def change_datetime(user_id, selected_datetime:str):
@@ -246,16 +382,24 @@ def postback_spaction(user_id, action, msg_ids):
         data = response.json()
         return [{"type": "text", "text": "すべて既読にしました"}]
 
+def get_(x:dict, y:str, z:str):
+    item = x.get(y)
+    if item is None:
+        return z
+    return item
+
 def flex_one_mail(data, msg_id):
-    _from = data["from"]
+    _from = get_(data, "from", "Unknown")
     _from = _from.split("<")[0]
-    _to = data["to"]
-    _subject = data["subject"]
-    _message = data["message"]
+    _to = get_(data, "to", "Unknown")
+    _subject = get_(data, "subject", "No Subject")
+    _message = get_(data, "message", "No Message")
     _importance = data["importance"]
     _category = data["category"]
     _importance_index = 3 - LABELS_IMPORTANCE.index(_importance)
-
+    _is_English = data.get("is_English", False)
+    print(data)
+    print(_to)
     bubble = {
         "type": "bubble",
         "styles": {
@@ -374,7 +518,7 @@ def flex_one_mail(data, msg_id):
                         "height": "sm",
                         "action": {
                             "type": "postback",
-                            "label": "返信",
+                            "label": "Reply" if _is_English else "返信",
                             "data": f"action=reply%{msg_id}",
                             "displayText": "返信を作成します"
                         },
@@ -386,7 +530,7 @@ def flex_one_mail(data, msg_id):
                         "height": "sm",
                         "action": {
                             "type": "postback",
-                            "label": "既読",
+                            "label": "Read" if _is_English else "既読",
                             "data": f"action=read%{msg_id}",
                             "displayText": "既読にします"
                         },
@@ -398,7 +542,7 @@ def flex_one_mail(data, msg_id):
                         "height": "sm",
                         "action": {
                             "type": "postback",
-                            "label": "GLinK(Not yet)",
+                            "label": "GLinK",
                             "data": f"action=Glink%{msg_id}"
                         },
                         "color": "#00B900"
@@ -678,7 +822,7 @@ def free_message(sentence, line_id):
     return messages
 
 def summary_reply(line_id):
-    url = f"https://mails.amano.mydns.jp/gmail/emails/summary?line_id={line_id}"
+    url = f"https://mails.amano.mydns.jp/gmail/summary?line_id={line_id}"
     response = requests.get(url)
     data = response.json()
     summaries = data["message"]
@@ -726,6 +870,25 @@ def summary_reply(line_id):
             "type": "box",
             "layout": "vertical",
             "contents": flex_contents
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "すべて既読にする",
+                        "data": f"spaction=read_all%{','.join(msg_ids)}",
+                        "displayText": "すべてのメールを既読にします"
+                    },
+                    "style": "primary",
+                    "color": "#00B900",
+                    "height": "sm"
+                }
+            ],
+            "margin": "sm"
         }
     }
 
@@ -979,6 +1142,7 @@ def class_reply(line_id):
                     "weight": "bold",
                     "size": "sm",
                     "flex": 3,
+                    "gravity": "center"
                 },
                 {
                     "type": "button",
@@ -1122,7 +1286,7 @@ def category_reply(user_id, category_id):
                                 "style": "primary",
                                 "color": "#00B900",
                                 "height": "sm",
-                                "flex": 1
+                                "flex": 2
                             }
                         ]
                     },
@@ -1172,7 +1336,7 @@ def category_reply(user_id, category_id):
                                 "style": "primary",
                                 "color": "#00B900",
                                 "height": "sm",
-                                "flex": 1
+                                "flex": 2
                             }
                         ],
                         "alignItems": "center"
@@ -1223,7 +1387,7 @@ def category_reply(user_id, category_id):
                                 "style": "primary",
                                 "color": "#00B900",
                                 "height": "sm",
-                                "flex": 1
+                                "flex": 2
                             }
                         ],
                         "alignItems": "center"
@@ -1258,57 +1422,36 @@ def category_reply(user_id, category_id):
             {
                 "type": "box",
                 "layout": "horizontal",
+                "margin": "sm",
                 "contents": [
                     {
                         "type": "text",
-                        "text": "カテゴリ2のアイテム1",
-                        "wrap": True,
+                        "text": f"{category}のアイテム",
                         "weight": "bold",
                         "size": "sm",
+                        "wrap": True,
+                        "margin": "sm",
                         "flex": 3,
+                        "gravity": "center"
                     },
                     {
                         "type": "button",
                         "action": {
                             "type": "postback",
-                            "label": "詳細",
-                            "data": "item=3"
+                            "label": "一覧",
+                            "data": f"ccategory={i}",
+                            "displayText":f"{category}を選択"
                         },
                         "style": "primary",
                         "color": "#00B900",
                         "height": "sm",
                         "flex": 1,
-                    }
-                ],
-                "margin": "md"
-            },
-            {
-                "type": "box",
-                "layout": "horizontal",
-                "contents": [
-                    {
-                        "type": "text",
-                        "text": "カテゴリ2のアイテム2",
-                        "wrap": True,
-                        "weight": "bold",
-                        "size": "sm",
-                        "flex": 3,
+                        "gravity": "center",
+                        "margin": "sm"
                     },
-                    {
-                        "type": "button",
-                        "action": {
-                            "type": "postback",
-                            "label": "詳細",
-                            "data": "item=4"
-                        },
-                        "style": "primary",
-                        "color": "#00B900",
-                        "height": "sm",
-                        "flex": 1,
-                    }
                 ],
-                "margin": "md"
-            }
+            } 
+            for i, category in enumerate(LABELS_CATEGORY)
         ]
 
         bubble = {

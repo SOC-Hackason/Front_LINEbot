@@ -1,4 +1,7 @@
+import requests
+
 def recent_address(addresses, unblock=False):
+
     """
     最近届いたメールアドレスのリストの表示
     """
@@ -80,4 +83,108 @@ def recent_address(addresses, unblock=False):
         "contents": bubble
     }
 
+    return [message]
+
+def block_unblock_message():
+    bubble = {
+        "type": "bubble",
+        "styles": {
+            "body": {
+                "backgroundColor": "#f0f8ff",
+                "separator": True,
+                "separatorColor": "#000000",
+            }
+        },
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "Block or Unblock",
+                    "weight": "bold",
+                    "size": "xl",
+                    "margin": "xs",
+                },
+            ],
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "Block",
+                        "data": "before_block",
+                        "displayText": "最近のアドレスを表示します"
+                    },
+                    "style": "secondary",
+                    "height": "sm",
+                    "margin": "md",
+                },
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "postback",
+                        "label": "Unblock",
+                        "data": "list_block",
+                        "displayText": "ブロックリストを表示します"
+                    },
+                    "style": "secondary",
+                    "height": "sm",
+                    "margin": "md",
+                }
+            ]
+        }
+    }
+
+    message = {
+        "type": "flex",
+        "altText": "Block or Unblock",
+        "contents": bubble
+    }
+
+    return [message]
+
+def language_setting():
+    # quick message japanese, english, chinese, korean, french, spanish, german, italian, portuguese
+    languages = ["日本語", "English", "中文", "한국어", "Français", "Español", "Deutsch", "Italiano", "Português"]
+    languages_in_english = ["Japanese", "English", "Chinese", "Korean", "French", "Spanish", "German", "Italian", "Portuguese"]
+    items = [
+        {
+            "type": "action",
+            "action": {
+                "type": "postback",
+                "label": lang,
+                "data": f"lang={lang_}"
+            }
+        } for lang, lang_ in zip(languages, languages_in_english)
+    ]
+
+    message = {
+        "type": "text",
+        "text": "言語設定",
+        "quickReply": {
+            "items": items
+        }
+    }
+
+    return [message]
+
+def set_language(line_id, lang):
+
+    url = "https://mails.amano.mydns.jp/gmail/change_language"
+    params = {
+        "line_id": line_id,
+        "language": lang
+    }
+
+    res = requests.get(url, params=params)
+    data = res.json()
+    message  = {
+        "type": "text",
+        "text": f"言語設定を{lang}に変更しました"
+    }
     return [message]
