@@ -118,6 +118,8 @@ def message_reply(user_id, received_message):
         messages = block_unblock_message()
     elif received_message == "言語を設定":
         messages = language_setting()
+    elif received_message == "使い方":
+        messages = usage_message()
     else:
         # get 
         messages = free_message(received_message, user_id)
@@ -1496,7 +1498,205 @@ def category_reply(user_id, category_id):
 
         return messages
 
+def usage_message():
+    bubble = {
+        "type": "bubble",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "使い方",
+                    "size": "xl",
+                    "margin": "xs",
+                    "align": "center",
+                    "decoration": "none",
+                    "style": "normal",
+                    "weight": "bold"
+                }
+            ],
+            "position": "relative",
+            "backgroundColor": "#EEEEEE",
+            "alignItems": "center",
+            "margin": "none",
+            "spacing": "none",
+            "height": "50px",
+            "offsetTop": "none",
+            "offsetBottom": "none",
+            "paddingAll": "10px"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "<機能＞",
+                    "margin": "none",
+                    "size": "sm",
+                    "weight": "regular",
+                    "offsetBottom": "5px"
+                },
+                {
+                    "type": "text",
+                    "text": "・一覧",
+                    "size": "sm",
+                    "weight": "bold",
+                    "margin": "xs",
+                    "action": {
+                        "type": "message",
+                        "label": "list",
+                        "text": "一覧"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "未読メールのタイトルを表示します",
+                    "weight": "regular",
+                    "size": "sm",
+                    "margin": "xs"
+                },
+                {
+                    "type": "text",
+                    "text": "・要約",
+                    "margin": "md",
+                    "size": "sm",
+                    "weight": "bold",
+                    "action": {
+                        "type": "message",
+                        "label": "summary",
+                        "text": "要約"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "最新のAIが未読メールを要約します",
+                    "size": "sm",
+                    "margin": "xs"
+                },
+                {
+                    "type": "text",
+                    "text": "・分類",
+                    "margin": "md",
+                    "size": "sm",
+                    "weight": "bold",
+                    "action": {
+                        "type": "message",
+                        "label": "classification",
+                        "text": "分類"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "メールを重要度とカテゴリで分類します",
+                    "size": "sm",
+                    "wrap": True,
+                    "margin": "xs"
+                },
+                {
+                    "type": "separator",
+                    "margin": "md"
+                },
+                {
+                    "type": "text",
+                    "text": "<設定＞",
+                    "margin": "md",
+                    "size": "sm",
+                    "weight": "regular",
+                    "offsetTop": "2px",
+                    "offsetBottom": "5px"
+                },
+                {
+                    "type": "text",
+                    "text": "・定期配信",
+                    "margin": "md",
+                    "size": "sm",
+                    "weight": "bold",
+                    "action": {
+                        "type": "datetimepicker",
+                        "label": "配信時刻の設定",
+                        "data": "datetime",
+                        "mode": "datetime"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "決まった時刻に、未読メール一覧を取得します",
+                    "size": "sm",
+                    "wrap": True,
+                    "margin": "xs"
+                },
+                {
+                    "type": "text",
+                    "text": "・ブロック",
+                    "margin": "md",
+                    "size": "sm",
+                    "weight": "bold",
+                    "action": {
+                        "type": "message",
+                        "label": "block",
+                        "text": "メールをブロック"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "メールをブロックできます",
+                    "size": "sm",
+                    "margin": "xs"
+                },
+                {
+                    "type": "text",
+                    "text": "・言語",
+                    "margin": "md",
+                    "size": "sm",
+                    "weight": "bold",
+                    "action": {
+                        "type": "message",
+                        "label": "language",
+                        "text": "言語を設定"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "使用言語を設定できます",
+                    "margin": "xs",
+                    "size": "sm"
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "↑太字をタップ↑",
+                    "size": "sm",
+                    "margin": "xs",
+                    "align": "center",
+                    "weight": "regular",
+                    "color": "#808080"
+                }
+            ]
+        },
+        "styles": {
+            "header": {
+                "separator": False
+            },
+            "footer": {
+                "separator": True
+            }
+        }
+    }
 
+    message = {
+        "type": "flex",
+        "altText": "使い方ガイド",
+        "contents": bubble
+    }
+
+    return [message]
 
 def read_message(message):
     messages = [
