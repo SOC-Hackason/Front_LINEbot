@@ -19,8 +19,7 @@ def recent_address(addresses, unblock=False):
         "type": "bubble",
         "styles": {
             "body": {
-                "backgroundColor": "#f0f8ff",
-                "separator": True,
+                "separator": False,
                 "separatorColor": "#000000",
             }
         },
@@ -34,8 +33,11 @@ def recent_address(addresses, unblock=False):
                     "weight": "bold",
                     "size": "xl",
                     "margin": "xs",
-                },
-            ]
+                    "align": "center"
+                }
+            ],
+            "backgroundColor": "#EEEEEE",
+            "paddingAll": "md"
         },
         "body": {
             "type": "box",
@@ -62,8 +64,9 @@ def recent_address(addresses, unblock=False):
                                 "data": f"{blk}={_addresses[i]}&{address}",
                                 "displayText": f"{blk} {address}"
                             },
-                            "style": "secondary",
+                            "style": "primary",
                             "height": "sm",
+                            "color": "#673B4D",
                             "flex": 3,
                         }
                     ]
@@ -90,8 +93,7 @@ def block_unblock_message():
         "type": "bubble",
         "styles": {
             "body": {
-                "backgroundColor": "#f0f8ff",
-                "separator": True,
+                "separator": False,
                 "separatorColor": "#000000",
             }
         },
@@ -105,8 +107,11 @@ def block_unblock_message():
                     "weight": "bold",
                     "size": "xl",
                     "margin": "xs",
+                    "align": "center"
                 },
             ],
+            "backgroundColor": "#EEEEEE",
+            "paddingAll": "md",
         },
         "body": {
             "type": "box",
@@ -122,7 +127,7 @@ def block_unblock_message():
                     },
                     "style": "secondary",
                     "height": "sm",
-                    "margin": "md",
+                    "margin": "none",
                 },
                 {
                     "type": "button",
@@ -134,7 +139,7 @@ def block_unblock_message():
                     },
                     "style": "secondary",
                     "height": "sm",
-                    "margin": "md",
+                    "margin": "lg",
                 }
             ]
         }
