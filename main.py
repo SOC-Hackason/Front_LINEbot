@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import requests, sys, json, os, datetime
 import linebot
 from dotenv import load_dotenv
-from app.jsons import *
+from jsons import *
 import random
 load_dotenv()
 CHANNEL_TOKEN = os.getenv("CHANNEL_TOKEN")
@@ -276,19 +276,16 @@ def get_importance_message(user_id, importance=None, category=None):
                     "size": "xl",
                     "align": "center",
                     "margin": "xs",
-                },
-                {
-                    "type": "separator",
-                    "margin": "xs",
-                    "color": "#000000"
                 }
-            ]
+            ],
+            "backgroundColor": "#EEEEEE",
+            "paddingAll": "md"
         },
         "body": {
             "type": "box",
             "layout": "vertical",
             "contents": flex_contents,
-            "paddingTop": "0px"
+            "paddingTop": "5px"
         },
         "footer": {
             "type": "box",
@@ -429,7 +426,10 @@ def flex_one_mail(data, msg_id):
                     "weight": "bold",
                     "size": "lg",
                     "wrap": True,
-                    "flex": 3
+                    "flex": 3,
+                    "offsetTop": "3px",
+                    "offsetStart": "5px",
+                    "offsetBottom": "3px"
                 },
                 {
                     "type": "box",
@@ -471,7 +471,8 @@ def flex_one_mail(data, msg_id):
                             "flex": 4
                         }
                     ],
-                    "margin": "md"
+                    "margin": "md",
+                    "offsetBottom": "sm"
                 },
                 {
                     "type": "box",
@@ -492,7 +493,8 @@ def flex_one_mail(data, msg_id):
                             "flex": 4
                         }
                     ],
-                    "margin": "md"
+                    "margin": "md",
+                    "offsetBottom": "sm"
                 },
                 {
                     "type": "box",
@@ -532,7 +534,8 @@ def flex_one_mail(data, msg_id):
                             "data": f"action=reply%{msg_id}",
                             "displayText": "返信を作成します"
                         },
-                        "color": "#673B4D"
+                        "color": "#673B4D",
+                        "margin": "none"
                     },
                     {
                         "type": "button",
@@ -544,7 +547,8 @@ def flex_one_mail(data, msg_id):
                             "data": f"action=read%{msg_id}",
                             "displayText": "既読にします"
                         },
-                        "color": "#673B4D"
+                        "color": "#673B4D",
+                        "margin": "sm"
                     },
                     {
                         "type": "button",
@@ -552,10 +556,11 @@ def flex_one_mail(data, msg_id):
                         "height": "sm",
                         "action": {
                             "type": "postback",
-                            "label": "GLinK",
+                            "label": "Gmail",
                             "data": f"action=Glink%{msg_id}"
                         },
-                        "color": "#673B4D"
+                        "color": "#673B4D",
+                        "margin": "sm"
                     },
                     ],
                 },
@@ -572,8 +577,7 @@ def flex_one_mail(data, msg_id):
                                 "label": f"{_importance}",
                                 "data": f"label=importance&msg_id={msg_id}",
                                 "displayText": f"Importanceを変更します"
-                            },
-                            "color": "#AAAAAA"
+                            }
                         },
                         {
                             "type": "button",
@@ -585,10 +589,10 @@ def flex_one_mail(data, msg_id):
                                 "data": f"label=category&msg_id={msg_id}",
                                 "displayText": f"Categoryを変更します"
                             },
-                            "color": "#AAAAAA"
+                            "margin": "sm"
                         }
                     ]
-                },
+                }
             ],
             "flex": 0
         }
@@ -727,6 +731,22 @@ def list_message(line_id):
 
     bubble = {
         "type": "bubble",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "未読メール 一覧",
+                    "weight": "bold",
+                    "align": "center",
+                    "size": "xl",
+                    "wrap": True
+                }
+            ],
+            "backgroundColor": "#EEEEEE",
+            "paddingAll": "md"
+        },
         "body": {
             "type": "box",
             "layout": "vertical",
@@ -793,7 +813,8 @@ def create_gmail_open_link_message(message_id):
                             "uri": gmail_link,
                         },
                         "style": "primary",
-                        "margin": "md"
+                        "margin": "md",
+                        "color": "#673B4D"
                     }
                 ]
             }
@@ -876,6 +897,22 @@ def summary_reply(line_id):
 
     bubble = {
         "type": "bubble",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "要約",
+                    "weight": "bold",
+                    "align": "center",
+                    "size": "xl",
+                    "wrap": True
+                }
+            ],
+            "backgroundColor": "#EEEEEE",
+            "paddingAll": "md"
+        },
         "body": {
             "type": "box",
             "layout": "vertical",
@@ -1150,7 +1187,7 @@ def class_reply(line_id):
                     "text": "重要度",
                     "wrap": True,
                     "weight": "bold",
-                    "size": "sm",
+                    "size": "md",
                     "flex": 3,
                     "gravity": "center"
                 },
@@ -1168,6 +1205,10 @@ def class_reply(line_id):
                     "flex": 1,
                 }
             ],
+            "margin": "sm"
+        },
+        {
+            "type": "separator",
             "margin": "md"
         },
         {
@@ -1179,8 +1220,9 @@ def class_reply(line_id):
                     "text": "カテゴリ",
                     "wrap": True,
                     "weight": "bold",
-                    "size": "sm",
+                    "size": "md",
                     "flex": 3,
+                    "gravity": "center"
                 },
                 {
                     "type": "button",
@@ -1208,9 +1250,10 @@ def class_reply(line_id):
             "contents": [
                 {
                     "type": "text",
-                    "text": "分類カテゴリの選択",
+                    "text": "分類の選択",
                     "weight": "bold",
-                    "size": "lg",
+                    "align": "center",
+                    "size": "xl",
                     "wrap": True
                 }
             ],
@@ -1242,14 +1285,6 @@ def category_reply(user_id, category_id):
                 "layout": "vertical",
                 "contents": [
                     {
-                        "type": "text",
-                        "text": "重要度",
-                        "weight": "bold",
-                        "size": "lg",
-                        "wrap": True,
-                        "margin": "sm" 
-                    },
-                    {
                         "type": "box",
                         "layout": "horizontal",
                         "contents": [
@@ -1274,15 +1309,17 @@ def category_reply(user_id, category_id):
                                     },
                                     {
                                         "type": "text",
-                                        "text": "めちゃ大事！",
-                                        "size": "sm",
+                                        "text": "EMERGENCY",
+                                        "size": "md",
                                         "color": "#8c8c8c",
                                         "weight": "bold",
                                         "margin": "md",
-                                        "flex": 1
+                                        "flex": 1,
+                                        "gravity": "center"
                                     }
                                 ],
-                                "flex": 4
+                                "flex": 4,
+                                "offsetTop": "9px"
                             },
                             {
                                 "type": "button",
@@ -1296,7 +1333,8 @@ def category_reply(user_id, category_id):
                                 "style": "primary",
                                 "color": "#673B4D",
                                 "height": "sm",
-                                "flex": 2
+                                "flex": 2,
+                                "gravity": "center"
                             }
                         ]
                     },
@@ -1325,8 +1363,8 @@ def category_reply(user_id, category_id):
                                     },
                                     {
                                         "type": "text",
-                                        "text": "ふつう",
-                                        "size": "sm",
+                                        "text": "NORMAL",
+                                        "size": "md",
                                         "color": "#8c8c8c",
                                         "weight": "bold",
                                         "margin": "md",
@@ -1376,8 +1414,8 @@ def category_reply(user_id, category_id):
                                     },
                                     {
                                         "type": "text",
-                                        "text": "ごみ",
-                                        "size": "sm",
+                                        "text": "GARBAGE",
+                                        "size": "md",
                                         "color": "#8c8c8c",
                                         "weight": "bold",
                                         "margin": "md",
@@ -1410,6 +1448,23 @@ def category_reply(user_id, category_id):
 
         bubble = {
             "type": "bubble",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                     {
+                        "type": "text",
+                        "text": "重要度",
+                        "weight": "bold",
+                        "align": "center",
+                        "size": "xl",
+                        "wrap": True
+                }
+            ],
+            "backgroundColor": "#EEEEEE",
+            "paddingAll": "md"
+            },
+
             "body": {
                 "type": "box",
                 "layout": "vertical",
@@ -1440,7 +1495,7 @@ def category_reply(user_id, category_id):
                         "weight": "bold",
                         "size": "sm",
                         "wrap": True,
-                        "margin": "sm",
+                        "margin": "md",
                         "flex": 3,
                         "gravity": "center"
                     },
@@ -1474,7 +1529,8 @@ def category_reply(user_id, category_id):
                         "type": "text",
                         "text": "カテゴリ",
                         "weight": "bold",
-                        "size": "lg",
+                        "align": "center",
+                        "size": "xl",
                         "wrap": True
                     }
                 ],
